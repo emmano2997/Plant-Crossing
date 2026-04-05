@@ -5,6 +5,7 @@ Este projeto consiste em um ambiente simulado 3D interativo, inspirado na estét
 ## 👥 Equipe
 * Emmanuel Aprígio Cavalcanti dos Santos - 
 * Kaio César de Oliveira Barreto -  
+* Ralph Derrick Ferreira -
 
 
 ## 🚀 Sobre o Projeto
