@@ -5,7 +5,7 @@ Este projeto consiste em um ambiente simulado 3D interativo, inspirado na estét
 ## 👥 Equipe
 * Emmanuel Aprígio Cavalcanti dos Santos - 
 * Kaio César de Oliveira Barreto -  
-* Ralph Derrick Ferreira -
+* Ralf Dewrich Ferreira -
 
 
 ## 🚀 Sobre o Projeto
@@ -22,5 +22,4 @@ O código implementa um mundo fechado contendo uma casa e um sistema de vegetaç
 
 ### Instruções de Compilação
 ```bash
-g++ main.cpp -lGL -lGLU -lglut -o projeto_cg
-./projeto_cg
+g++ plant-crossing.c -o plant-crossing -lGL -lGLU -lglut && ./plant-crossing
