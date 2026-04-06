@@ -31,7 +31,7 @@ GLuint carregaTextura(const char* arquivo) {
 float growthScale   = 0.01f;
 float rotationAngle = 0.0f;
 float windOffset    = 0.0f;   // balanço do vento
-float bounceY       = 0.0f;   // "bounce" de crescimento estilo AC
+float bounceY       = 0.0f;   // "bounce" de crescimento da arvore
 
 // ─── Primitivas ─────────────────────────────────────────────────────
 
@@ -78,26 +78,26 @@ void desenhaLosango(float raio, float alturaTotal) {
     }
 }
 
-// ─── Laranja (fruto) ────────────────────────────────────────────────
-void desenhaLaranja(float raio) {
-    // corpo laranja
+// ─── (fruto) ────────────────────────────────────────────────
+void desenhafruta(float raio) {
+    // corpo da fruta
     glDisable(GL_TEXTURE_2D);
-    glColor3f(1.0f, 0.55f, 0.0f);
+    glColor3f(1.0f, 0.0f, 0.0f);
     GLUquadric* q = gluNewQuadric();
-    gluSphere(q, raio, 8, 8);   // 8 fatias = low-poly
+    gluSphere(q, raio, 8, 8);   // 8 fatias 
 
     // pequeno cabo verde no topo
     glColor3f(0.2f, 0.5f, 0.1f);
     glPushMatrix();
-        glTranslatef(0.0f, raio * 0.9f, 0.0f);
+        glTranslatef(0.0f, raio * 1.0f, 0.0f);
         glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
-        gluCylinder(q, raio * 0.05f, raio * 0.02f, raio * 0.4f, 5, 1);
+        gluCylinder(q, raio * 0.15f, raio * 0.12f, raio * 0.4f, 5, 1);
     glPopMatrix();
 
     gluDeleteQuadric(q);
 }
 
-// ─── Copa da árvore (camadas de losangos + laranjas) ───────────────────
+// ─── Copa da árvore (camadas de losangos + frutas) ───────────────────
 void desenhaCopa(float raioBase, float alturaBase) {
     glDisable(GL_TEXTURE_2D); // losango usa cor sólida flat
 
@@ -123,12 +123,23 @@ void desenhaCopa(float raioBase, float alturaBase) {
         desenhaLosango(raioBase * 0.50f, alturaBase * 0.62f);
     glPopMatrix();
 
-    // ── laranjas na copa ──────────────────────
-    float raioLaranja = raioBase * 0.18f;
-    // laranja no topo
+    // ── frutas na copa ──────────────────────
+    float raiofruta = raioBase * 0.18f;
+        for (int i = 0; i < 3; i++) {
+        float angulo = (2.0f * M_PI * i) / 3;
+        float dist   = raioBase * 0.65f;
+        float px     = dist * cos(angulo);
+        float pz     = dist * sin(angulo);
+        float py     = alturaBase * 0.40f;
+        glPushMatrix();
+            glTranslatef(px, py, pz);
+            desenhafruta(raiofruta);
+        glPopMatrix();
+    }
+    // fruta no topo
     glPushMatrix();
         glTranslatef(0.0f, alturaBase * 1.55f, 0.0f);
-        desenhaLaranja(raioLaranja * 0.85f);
+        desenhafruta(raiofruta * 0.85f);
     glPopMatrix();
 }
 
@@ -146,7 +157,7 @@ void desenhaTronco(float altura, float raio, int nivel) {
     if (nivel == 0) {
         // folhagem no topo dos galhos terminais
         glDisable(GL_TEXTURE_2D);
-        desenhaCopa(altura * 1.6f, altura * 2.0f);
+        desenhaCopa(altura * 1.5f, altura * 1.5f);
         return;
     }
 
