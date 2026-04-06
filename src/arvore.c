@@ -40,3 +40,12 @@ void criarArvore(float altura, float raio, int nivel) {
     criarArvore(altura * 0.75f, raio * 0.7f, nivel - 1);
     glPopMatrix();
 }
+
+void desenharArvore(float x, float y, float z, float rotacao) {
+    glPushMatrix();
+    glTranslatef(x, y, z);
+    glRotatef(rotacao, 0.0f, 1.0f, 0.0f);
+    glScalef(growthScale, growthScale, growthScale);
+    criarArvore(4.0f, 0.3f, 3);
+    glPopMatrix();
+}

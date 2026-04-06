@@ -1,6 +1,7 @@
 #include <GL/glut.h>
 #include "../include/camera.h"
 #include "../include/arvore.h"
+#include "../include/casa.h" 
 
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -19,10 +20,11 @@ void display() {
     glEnd();
 
     // Árvore
-    glPushMatrix();
-    glScalef(growthScale, growthScale, growthScale);
-    criarArvore(4.0f, 0.3f, 3);
-    glPopMatrix();
+    desenharArvore(10.0f, 0.0f, 0.0f, 0.0f);
+
+    // Casa
+    //            x       y     z       rotação em graus (eixo Y)
+    desenharCasa(-10.0f, 0.0f, 0.0f, 90.0f);
 
     glutSwapBuffers();
 }
