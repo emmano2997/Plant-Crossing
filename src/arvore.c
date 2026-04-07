@@ -115,10 +115,10 @@ static void desenhafruta(float raio) {
     glDisable(GL_TEXTURE_2D);
     glColor3f(1.0f, 0.0f, 0.0f);
     GLUquadric* q = gluNewQuadric();
-    gluSphere(q, raio, 8, 8);
+    gluSphere(q, raio, 5, 5);
 
     glColor3f(0.2f, 0.5f, 0.1f);
-    glPushMatrix();
+    glPushMatrix(); // caule da fruta
         glTranslatef(0.0f, raio * 1.0f, 0.0f);
         glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
         gluCylinder(q, raio * 0.15f, raio * 0.12f, raio * 0.4f, 5, 1);
@@ -127,12 +127,40 @@ static void desenhafruta(float raio) {
 }
 static void desenhaFlor(float raio) {
     glDisable(GL_TEXTURE_2D);
-    glColor3f(1.0f, 0.6f, 0.8f); // Rosa claro
+
     GLUquadric* q = gluNewQuadric();
-    gluSphere(q, raio, 6, 6); // Uma esfera pequena como flor
+
+    glColor3f(1.0f, 0.8f, 0.0f); 
+    gluSphere(q, raio * 0.3f, 6, 6); 
+
+    int numPetalas = 5;
+
+    for (int i = 0; i < numPetalas; i++) {
+        float ang = (2.0f * 3.14159f * i) / numPetalas;
+
+        glPushMatrix();
+
+        // posição ao redor
+        float x = cos(ang) * (raio * 0.6f);
+        float z = sin(ang) * (raio * 0.6f);
+
+        glTranslatef(x, 0.0f, z);
+
+        // leve inclinação
+        glRotatef(-20, 1.0f, 0.0f, 0.0f);
+
+        // girar cada pétala para fora
+        glRotatef(-ang * 180.0f / 3.14159f, 0.0f, 1.0f, 0.0f);
+
+        glColor3f(1.0f, 0.4f, 0.7f);
+        glScalef(0.8f, 0.2f, 1.2f);
+        gluSphere(q, raio * 0.4f, 6, 6); 
+
+        glPopMatrix();
+    }
+
     gluDeleteQuadric(q);
 }
-
 static void desenhaNeve(float raio) {
     glDisable(GL_TEXTURE_2D);
     glColor3f(0.89f, 0.89f, 1.0f); // neve
@@ -198,21 +226,21 @@ static void desenhaCopa(float raioBase, float alturaBase, int comFruta, int esta
     }
 
     float raioExtra = raioBase * 0.18f;
-    for (int i = 0; i < 3; i++) {
-        float angulo = (2.0f * M_PI * i) / 3;
+    for (int i = 0; i < 4; i++) {
+        float angulo = (2.0f * M_PI * i) / 4;
         float dist   = raioBase * 0.65f;
         float px = dist * cos(angulo);
         float pz = dist * sin(angulo);
-        float py = alturaBase * 0.40f;
+        float py = alturaBase * 0.60f;
 
         glPushMatrix();
             glTranslatef(px, py, pz);
             if (estacao == 0 && comFruta) {
                 desenhafruta(raioExtra);
             } else if (estacao == 3) {
-                desenhaFlor(raioExtra * 0.8f);
+                desenhaFlor(raioExtra * 0.5f);
             } else if (estacao == 2) {
-                desenhaNeve(raioExtra * 0.6f); 
+                desenhaNeve(raioExtra * 0.3f); 
             }
         glPopMatrix();
     }
