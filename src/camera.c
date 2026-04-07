@@ -142,7 +142,7 @@ if (key == 27) exit(0);
             } else {
                 // Vai para o exterior
                 float hx = -10.0f, hz = 0.0f, hRotDeg = 90.0f;
-                float spawnLocalZ = 0.5f; 
+                float spawnLocalZ = 0.0f; 
                 float radSpawn = hRotDeg * M_PI / 180.0f;
                 
                 camX = hx + spawnLocalZ * sin(radSpawn);

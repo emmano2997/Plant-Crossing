@@ -42,13 +42,31 @@ int checkWorldCollision(float px, float pz) {
 
         // Verificamos se a posição da câmera + o seu raio ultrapassa as paredes
         // Se X + raio > 5.0 (Parede Direita)
-        if (px + PR + 0.6f >  tamanho) return 1;
+        if (px + PR >  tamanho) return 1;
         // Se X - raio < -5.0 (Parede Esquerda)
-        if (px - PR - 0.6f < -tamanho) return 1;
+        if (px - PR < -tamanho) return 1;
         // Se Z + raio > 5.0 (Parede Frontal)
-        if (pz + PR + 0.6f >  tamanho) return 1;
+        if (pz + PR >  tamanho) return 1;
         // Se Z - raio < -5.0 (Parede Traseira)
-        if (pz - PR - 0.6f < -tamanho) return 1;
+        if (pz - PR < -tamanho) return 1;
+
+        // --- COLISÃO DOS MÓVEIS (AABB Geometrics) ---
+        // IN_BOX inflaciona automaticamente com o raio PR, criando a malha de colisão
+        
+        // 1. Cama (No canto traseiro esquerdo)
+        if (IN_BOX(px, pz, -5.0f, -2.0f, -5.0f, -1.0f)) return 1;
+        
+        // 2. Mesa de Cabeceira (Ao lado da cama)
+        if (IN_BOX(px, pz, -1.8f, -0.6f, -5.0f, -3.8f)) return 1;
+        
+        // 3. Armário (No canto traseiro direito)
+        if (IN_BOX(px, pz, 2.0f, 5.0f, -5.0f, -3.2f)) return 1;
+        
+        // 4. Mesa (Centralizada na parede direita)
+        if (IN_BOX(px, pz, 3.0f, 5.0f, -1.4f, 1.4f)) return 1;
+        
+        // 5. Cadeira (Na frente da mesa, inclui área de folga para a rotação)
+        if (IN_BOX(px, pz, 1.6f, 3.0f, -0.6f, 0.6f)) return 1;
 
         return 0;
     } else {
@@ -119,6 +137,34 @@ void renderText2D(float x, float y, const char *string) {
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
 }
+
+// --- Checa se o jogador está perto da cama ---
+int camera_canInteractWithBed() {
+    // Acessa as variáveis globais da câmera e estado do interior
+    extern float camX, camZ;
+    extern int isInsideInterior;
+
+    // Só pode interagir com a cama se estiver dentro de casa
+    if (isInsideInterior) {
+        // Centro da cama baseado no seu casa_interior.c (X = -3.5f, Z = -3.0f)
+        float bedX = -3.5f;
+        float bedZ = -3.0f;
+
+        // Calcula a distância do jogador até o centro da cama
+        float dx = camX - bedX;
+        float dz = camZ - bedZ;
+        float distBed = sqrt(dx*dx + dz*dz);
+
+        // Raio de alcance (3.0f é o suficiente para englobar a cama e a mesa de cabeceira)
+        float raioInteracaoCama = 3.0f;
+
+        if (distBed <= raioInteracaoCama) {
+            return 1; // Pode dormir!
+        }
+    }
+    return 0; // Muito longe ou do lado de fora
+}
+
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
@@ -137,14 +183,11 @@ void display() {
     // Desenha o interior expandido lá embaixo (Y = -50)
     desenharInteriorExpandido(0.0f, -50.0f, 0.0f);
 
-    // --- DESENHO DO HUD / UI ---
-    // Checa se o jogador está na distância da porta
+// --- DESENHO DO HUD / UI ---
+    int screenHeight = glutGet(GLUT_WINDOW_HEIGHT);
+
+    // 1. Checa se o jogador está na distância da porta
     if (camera_canInteractWithDoor()) {
-        
-        // Pega a altura da tela dinamicamente para o texto ficar sempre no canto superior esquerdo
-        int screenHeight = glutGet(GLUT_WINDOW_HEIGHT);
-        
-        // Sombra do texto (para dar contraste caso o fundo seja claro)
         glColor3f(0.0f, 0.0f, 0.0f); 
         if (isInsideInterior) {
             renderText2D(21.0f, screenHeight - 39.0f, "'Z' para Sair");
@@ -152,13 +195,22 @@ void display() {
             renderText2D(21.0f, screenHeight - 39.0f, "'Z' para Entrar");
         }
 
-        // Texto principal (Amarelo para chamar atenção)
         glColor3f(1.0f, 1.0f, 0.0f); 
         if (isInsideInterior) {
             renderText2D(20.0f, screenHeight - 40.0f, "'Z' para Sair");
         } else {
             renderText2D(20.0f, screenHeight - 40.0f, "'Z' para Entrar");
         }
+    }
+
+    // 2. Checa se o jogador está na distância da cama
+    if (camera_canInteractWithBed()) {
+        // Colocamos o Y em -70 para ficar na linha de baixo do texto da porta
+        glColor3f(0.0f, 0.0f, 0.0f); 
+        renderText2D(21.0f, screenHeight - 69.0f, "'F' para Dormir");
+        
+        glColor3f(1.0f, 1.0f, 0.0f); 
+        renderText2D(20.0f, screenHeight - 70.0f, "'F' para Dormir");
     }
 
     glutSwapBuffers();
@@ -172,15 +224,19 @@ void teclado(unsigned char key, int x, int y) {
             break;
  
         case 'f':  {
-            // Jogador dormiu — passa a estacao
-            int morreu = arvore_dormir();
-            if (morreu) {
-                printf("Sua planta morreu! Tente novamente.\n");
+            // Jogador dormiu — passa a estacao (SÓ SE ESTIVER PERTO DA CAMA)
+            if (camera_canInteractWithBed()) {
+                int morreu = arvore_dormir();
+                if (morreu) {
+                    printf("Sua planta morreu! Tente novamente.\n");
+                }
+            } else {
+                printf("Voce precisa estar perto da sua cama para dormir!\n");
             }
             break;
         }
     }
-    // repassa para a camera (nao quebra os controles do colega)
+    // repassa para a camera
     camera_keyDown(key, x, y);
 }
 
@@ -196,7 +252,7 @@ void init() {
     glClearColor(0.5f, 0.8f, 1.0f, 1.0f);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0, 800.0/600.0, 1.0, 100.0);
+    gluPerspective(45.0, 800.0/600.0, 0.1, 100.0);
     glMatrixMode(GL_MODELVIEW);
 
     arvore_init();
