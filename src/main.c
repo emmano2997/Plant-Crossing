@@ -89,14 +89,8 @@ void display() {
 
     camera_lookAt(); // ← toda lógica de câmera encapsulada aqui
 
-    // Chão
-    glColor3f(0.2f, 0.5f, 0.2f);
-    glBegin(GL_QUADS);
-        glVertex3f(-20.0f, 0.0f, -20.0f);
-        glVertex3f(-20.0f, 0.0f,  20.0f);
-        glVertex3f( 20.0f, 0.0f,  20.0f);
-        glVertex3f( 20.0f, 0.0f, -20.0f);
-    glEnd();
+    // cenario
+    mundo_desenhar(estacaoAtual);
 
     // Árvore
     desenharArvore(ARVORE_X, ARVORE_Y, ARVORE_Z, ARVORE_ROT);
@@ -110,12 +104,12 @@ void display() {
 }
 void teclado(unsigned char key, int x, int y) {
     switch (key) {
-        case 'r': case 'R':
+        case 'r': 
             // Jogador regou a planta
             arvore_regar();
             break;
  
-        case 'f': case 'F': {
+        case 'f':  {
             // Jogador dormiu — passa a estacao
             int morreu = arvore_dormir();
             if (morreu) {
