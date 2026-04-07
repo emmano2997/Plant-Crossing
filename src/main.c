@@ -3,6 +3,9 @@
 #include "../include/camera.h"
 #include "../include/arvore.h"
 #include "../include/casa.h"    
+#include "../include/mundo.h"
+
+extern int estacaoAtual; 
 
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -11,32 +14,26 @@ void display() {
 
     camera_lookAt(); // ← toda lógica de câmera encapsulada aqui
 
-    // Chão
-    glColor3f(0.2f, 0.5f, 0.2f);
-    glBegin(GL_QUADS);
-        glVertex3f(-20.0f, 0.0f, -20.0f);
-        glVertex3f(-20.0f, 0.0f,  20.0f);
-        glVertex3f( 20.0f, 0.0f,  20.0f);
-        glVertex3f( 20.0f, 0.0f, -20.0f);
-    glEnd();
+    // cenario
+    mundo_desenhar(estacaoAtual);
 
     // Árvore
     desenharArvore(10.0f, 0.0f, 0.0f, 0.0f);
 
     // Casa
     //            x       y     z       rotação em graus (eixo Y)
-    desenharCasa(-10.0f, 0.0f, 0.0f, 90.0f);
+    desenharCasa(-10.0f, 0.2f, 0.0f, 90.0f);
 
     glutSwapBuffers();
 }
 void teclado(unsigned char key, int x, int y) {
     switch (key) {
-        case 'r': case 'R':
+        case 'r': 
             // Jogador regou a planta
             arvore_regar();
             break;
  
-        case 'f': case 'F': {
+        case 'f':  {
             // Jogador dormiu — passa a estacao
             int morreu = arvore_dormir();
             if (morreu) {
