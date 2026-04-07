@@ -1,4 +1,5 @@
 #include <GL/glut.h>
+#include <stdio.h>
 #include "../include/camera.h"
 #include "../include/arvore.h"
 #include "../include/casa.h"    
@@ -27,6 +28,25 @@ void display() {
     desenharCasa(-10.0f, 0.0f, 0.0f, 90.0f);
 
     glutSwapBuffers();
+}
+void teclado(unsigned char key, int x, int y) {
+    switch (key) {
+        case 'r': case 'R':
+            // Jogador regou a planta
+            arvore_regar();
+            break;
+ 
+        case 'f': case 'F': {
+            // Jogador dormiu — passa a estacao
+            int morreu = arvore_dormir();
+            if (morreu) {
+                printf("Sua planta morreu! Tente novamente.\n");
+            }
+            break;
+        }
+    }
+    // repassa para a camera (nao quebra os controles do colega)
+    camera_keyDown(key, x, y);
 }
 
 void update(int value) {
@@ -57,7 +77,7 @@ int main(int argc, char** argv) {
     init();
 
     glutDisplayFunc(display);
-    glutKeyboardFunc(camera_keyDown);       // ← callbacks da câmera
+    glutKeyboardFunc(teclado);       // ← callbacks da câmera
     glutKeyboardUpFunc(camera_keyUp);
     glutMouseFunc(camera_mouseButton);
     glutMotionFunc(camera_mouseMotion); 
@@ -68,3 +88,9 @@ int main(int argc, char** argv) {
     glutMainLoop();
     return 0;
 }
+// ─── Resumo dos controles ─────────────────────────────────────────────
+// R  →  rega a planta (so funciona uma vez por estacao)
+// F  →  dorme / passa para proxima estacao
+//        se regou: planta cresce (estagio++)
+//        se nao regou: planta regride (estagio--)
+//        se era brotinho sem rega: MORRE (estagio=4)

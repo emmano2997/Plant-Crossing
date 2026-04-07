@@ -7,21 +7,38 @@
 extern GLuint texTronco;
 extern GLuint texFolha;
 
-// ─── Variáveis de animação ───────────────────────────────────────────
+// ─── Animacao ────────────────────────────────────────────────────────
 extern float growthScale;
 extern float windOffset;
 extern float bounceY;
 
-// Estagio da planta:
-// 0 = brotinho   1 = jovem   2 = adulta (sem fruto)
-// 3 = madura (com fruto)    4 = morta
+// ─── Estado da planta ────────────────────────────────────────────────
+// 0=brotinho  1=jovem  2=adulta  3=madura(+fruta)  4=morta
 extern int estagioPlantas;
 
-// ─── Funções públicas ────────────────────────────────────────────────
-void arvore_init();   // carrega texturas — chama no init() da main
-void arvore_update(); // atualiza growthScale/bounce/vento — chama no update() da main
+// ─── Estado do mundo ─────────────────────────────────────────────────
+// 0=verao  1=outono  2=inverno  3=primavera
+extern int estacaoAtual;
 
-// mesma assinatura que a main do colega usa:
+// Flag: jogador regou nessa estacao (0=nao 1=sim)
+extern int regouEssaEstacao;
+
+// ─── Funcoes publicas ────────────────────────────────────────────────
+
+// Chama no init() — carrega texturas
+void arvore_init();
+
+// Chama no update() — atualiza animacoes
+void arvore_update();
+
+// Chama no display() — desenha a arvore na posicao (x,y,z) com rotacao Y
 void desenharArvore(float x, float y, float z, float rotacao);
+
+// Jogador interagiu com a planta para regar
+void arvore_regar();
+
+// Jogador dormiu — faz a transicao de estagio + estacao
+// Retorna 1 se a planta morreu nessa transicao, 0 caso contrario
+int arvore_dormir();
 
 #endif
