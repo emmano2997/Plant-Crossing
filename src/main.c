@@ -83,6 +83,43 @@ int checkWorldCollision(float px, float pz) {
     }
 }
 
+// --- NOVA FUNÇÃO: Renderizador de UI 2D ---
+void renderText2D(float x, float y, const char *string) {
+    // Pega o tamanho atual da janela para o mapeamento 2D
+    int width = glutGet(GLUT_WINDOW_WIDTH);
+    int height = glutGet(GLUT_WINDOW_HEIGHT);
+
+    // Salva matriz de projeção 3D e entra no modo 2D ortográfico
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, width, 0, height); 
+
+    // Salva matriz de modelagem e reseta
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // Desativa testes 3D para desenhar "por cima" de tudo
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING); // Caso você use luzes futuramente
+
+    // Posiciona e desenha o texto
+    glRasterPos2f(x, y);
+    for (const char *c = string; *c != '\0'; c++) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+    }
+
+    // Restaura configurações 3D
+    glEnable(GL_DEPTH_TEST);
+    
+    // Restaura as matrizes
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+}
+
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
@@ -101,8 +138,33 @@ void display() {
     // Desenha o interior expandido lá embaixo (Y = -50)
     desenharInteriorExpandido(0.0f, -50.0f, 0.0f);
 
+    // --- DESENHO DO HUD / UI ---
+    // Checa se o jogador está na distância da porta
+    if (camera_canInteractWithDoor()) {
+        
+        // Pega a altura da tela dinamicamente para o texto ficar sempre no canto superior esquerdo
+        int screenHeight = glutGet(GLUT_WINDOW_HEIGHT);
+        
+        // Sombra do texto (para dar contraste caso o fundo seja claro)
+        glColor3f(0.0f, 0.0f, 0.0f); 
+        if (isInsideInterior) {
+            renderText2D(21.0f, screenHeight - 39.0f, "'Z' para Sair");
+        } else {
+            renderText2D(21.0f, screenHeight - 39.0f, "'Z' para Entrar");
+        }
+
+        // Texto principal (Amarelo para chamar atenção)
+        glColor3f(1.0f, 1.0f, 0.0f); 
+        if (isInsideInterior) {
+            renderText2D(20.0f, screenHeight - 40.0f, "'Z' para Sair");
+        } else {
+            renderText2D(20.0f, screenHeight - 40.0f, "'Z' para Entrar");
+        }
+    }
+
     glutSwapBuffers();
 }
+
 void teclado(unsigned char key, int x, int y) {
     switch (key) {
         case 'r': 

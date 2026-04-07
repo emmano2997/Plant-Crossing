@@ -6,6 +6,9 @@ extern float camX, camY, camZ;
 extern float camYaw, camPitch;
 extern int   keys[256];
 
+extern int isInsideInterior;
+int camera_canInteractWithDoor();
+
 void camera_init();
 void camera_getFront(float *fx, float *fy, float *fz);
 void camera_processMovement();

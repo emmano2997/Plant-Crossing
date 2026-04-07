@@ -7,7 +7,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-static int isInsideInterior = 0;
+int isInsideInterior = 0;
 
 extern int checkWorldCollision(float x, float z);
 
@@ -105,63 +105,51 @@ void camera_lookAt() {
     );
 }
 
+int camera_canInteractWithDoor() {
+    float raioInteracao = 2.0f;
+
+    if (!isInsideInterior) {
+        float hx = -10.0f, hz = 0.0f, hRotDeg = 90.0f;
+        float dx = camX - hx;
+        float dz = camZ - hz;
+        float radLocal = -hRotDeg * M_PI / 180.0f;
+        
+        float lx = dx * cos(radLocal) - dz * sin(radLocal);
+        float lz = dx * sin(radLocal) + dz * cos(radLocal);
+
+        float distDoor = sqrt(lx*lx + (lz - 2.0f)*(lz - 2.0f));
+        return (distDoor <= raioInteracao);
+    } else {
+        float distDoor = sqrt(camX*camX + (camZ - 5.0f)*(camZ - 5.0f));
+        return (distDoor <= raioInteracao);
+    }
+}
+
 void camera_keyDown(unsigned char key, int x, int y) {
-    if (key == 27) exit(0); // Esc
-
-// --- LÓGICA DE TELETRANSPORTE (TECLA Z) COM RAIO DE INTERAÇÃO ---
+if (key == 27) exit(0);
+    
+    // --- LÓGICA DE TELETRANSPORTE (TECLA Z) ---
     if ((key == 'z' || key == 'Z') && !keys[(int)key]) {
-        float raioInteracao = 2.0f; // Distância máxima para interagir
-
-        if (!isInsideInterior) {
-            // --- MUNDO EXTERIOR PARA INTERIOR ---
-            float hx = -10.0f, hz = 0.0f, hRotDeg = 90.0f;
-            
-            float dx = camX - hx;
-            float dz = camZ - hz;
-            float radLocal = -hRotDeg * M_PI / 180.0f;
-            
-            float lx = dx * cos(radLocal) - dz * sin(radLocal);
-            float lz = dx * sin(radLocal) + dz * cos(radLocal);
-
-            float distDoor = sqrt(lx*lx + (lz - 2.0f)*(lz - 2.0f));
-
-            if (distDoor <= raioInteracao) {
-                // Teletransporta para a sala subterrânea
+        if (camera_canInteractWithDoor()) {
+            if (!isInsideInterior) {
+                // Vai para o interior
                 camX = 0.0f; 
                 camY = -50.0f + playerHeight; 
-                camZ = 3.5f; // Fica a 1.5 unidades de distância da porta (Z=5.0)
-                
-                camYaw = -90.0f; // Olha para o fundo da sala (-Z)
+                camZ = 3.5f; 
+                camYaw = -90.0f; 
                 camPitch = 0.0f; 
-                
                 isInsideInterior = 1;
-            }
-        } else {
-            // --- INTERIOR PARA MUNDO EXTERIOR ---
-            // A porta interna está em X = 0 e Z = 5.0
-            float distDoor = sqrt(camX*camX + (camZ - 5.0f)*(camZ - 5.0f));
-
-            if (distDoor <= raioInteracao) {
-                // Dados da casa no exterior (devem ser os mesmos usados acima e no main.c)
+            } else {
+                // Vai para o exterior
                 float hx = -10.0f, hz = 0.0f, hRotDeg = 90.0f;
-                
-                // Distância que o jogador deve aparecer à frente da porta externa
                 float spawnLocalZ = 0.5f; 
-                
-                // Converte a rotação da casa para radianos
                 float radSpawn = hRotDeg * M_PI / 180.0f;
                 
-                // Calcula a posição global (X e Z) usando a matriz de rotação
                 camX = hx + spawnLocalZ * sin(radSpawn);
                 camZ = hz + spawnLocalZ * cos(radSpawn);
-                camY = playerHeight; // Retorna para a altura do chão principal
-                
-                // Calcula para onde o jogador deve olhar (Yaw)
-                // Uma casa sem rotação tem a porta virada para +Z (Yaw 90). 
-                // Subtraímos a rotação da casa para a câmera alinhar com o mundo.
+                camY = playerHeight; 
                 camYaw = 90.0f - hRotDeg;
-                camPitch = 0.0f; // Nivele a visão do jogador
-                
+                camPitch = 0.0f; 
                 isInsideInterior = 0;
             }
         }
