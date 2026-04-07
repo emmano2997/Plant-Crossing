@@ -46,6 +46,12 @@ static GLuint carregaTextura(const char* arquivo) {
 void arvore_init() {
     texTronco = carregaTextura("texture/log-texture-brown.jpg");
     texFolha  = carregaTextura("texture/leaf-texture.jpeg");
+
+    // estado inicial: brotinho no verao, ainda nao regou
+    estagioPlantas   = 0;
+    estacaoAtual     = 0;
+    regouEssaEstacao = 0;
+    growthScale      = 0.01f;
 }
 
 // ─── Update  ─────────────────────────────
@@ -109,10 +115,10 @@ static void desenhafruta(float raio) {
     glDisable(GL_TEXTURE_2D);
     glColor3f(1.0f, 0.0f, 0.0f);
     GLUquadric* q = gluNewQuadric();
-    gluSphere(q, raio, 8, 8);
+    gluSphere(q, raio, 5, 5);
 
     glColor3f(0.2f, 0.5f, 0.1f);
-    glPushMatrix();
+    glPushMatrix(); // caule da fruta
         glTranslatef(0.0f, raio * 1.0f, 0.0f);
         glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
         gluCylinder(q, raio * 0.15f, raio * 0.12f, raio * 0.4f, 5, 1);
@@ -121,71 +127,121 @@ static void desenhafruta(float raio) {
 }
 static void desenhaFlor(float raio) {
     glDisable(GL_TEXTURE_2D);
-    glColor3f(1.0f, 0.6f, 0.8f); // Rosa claro
+
     GLUquadric* q = gluNewQuadric();
-    gluSphere(q, raio, 6, 6); // Uma esfera pequena como flor
-    gluDeleteQuadric(q);
-}
 
-static void desenhaNeve(float raio) {
-    glDisable(GL_TEXTURE_2D);
-    glColor3f(0.95f, 0.95f, 1.0f); // Branco neve
-    GLUquadric* q = gluNewQuadric();
-    gluSphere(q, raio, 6, 6);
-    gluDeleteQuadric(q);
-}
+    glColor3f(1.0f, 0.8f, 0.0f); 
+    gluSphere(q, raio * 0.3f, 6, 6); 
 
-// ─── Copa  ─────────
-static void desenhaCopa(float raioBase, float alturaBase, int comFruta, int estacao) {
-glDisable(GL_TEXTURE_2D);
-    if (estacao != 2) {
-        switch (estacao) {
-            case 0: glColor3f(0.18f, 0.62f, 0.18f); break; // Verão: Verde
-            case 1: glColor3f(0.80f, 0.40f, 0.10f); break; // Outono: Laranja/Marrom
-            case 3: glColor3f(0.40f, 0.85f, 0.40f); break; // Primavera: Verde Claro
-        }
+    int numPetalas = 5;
 
-        // Camada 1
+    for (int i = 0; i < numPetalas; i++) {
+        float ang = (2.0f * 3.14159f * i) / numPetalas;
+
         glPushMatrix();
-            glRotatef(45.0f, 0.0f, 1.0f, 0.0f);
-            desenhaLosango(raioBase, alturaBase);
-        glPopMatrix();
 
-        // Camada 2 (tom levemente diferente)
-        if(estacao == 0) glColor3f(0.25f, 0.75f, 0.20f);
-        glPushMatrix();
-            glTranslatef(0.0f, alturaBase * 0.50f, 0.0f);
-            desenhaLosango(raioBase * 0.75f, alturaBase * 0.82f);
-        glPopMatrix();
+        // posição ao redor
+        float x = cos(ang) * (raio * 0.6f);
+        float z = sin(ang) * (raio * 0.6f);
 
-        // Camada 3
-        if(estacao == 0) glColor3f(0.35f, 0.88f, 0.28f);
-        glPushMatrix();
-            glTranslatef(0.0f, alturaBase * 0.95f, 0.0f);
-            glRotatef(45.0f, 0.0f, 1.0f, 0.0f);
-            desenhaLosango(raioBase * 0.50f, alturaBase * 0.62f);
-        glPopMatrix();
-    } else {
-        // Inverno: Apenas neve no topo
-        glPushMatrix();
-            glTranslatef(0.0f, 0.1f, 0.0f);
-            desenhaNeve(raioBase * 0.2f);
+        glTranslatef(x, 0.0f, z);
+
+        // leve inclinação
+        glRotatef(-20, 1.0f, 0.0f, 0.0f);
+
+        // girar cada pétala para fora
+        glRotatef(-ang * 180.0f / 3.14159f, 0.0f, 1.0f, 0.0f);
+
+        glColor3f(1.0f, 0.4f, 0.7f);
+        glScalef(0.8f, 0.2f, 1.2f);
+        gluSphere(q, raio * 0.4f, 6, 6); 
+
         glPopMatrix();
     }
 
-    // Extras: Frutas, Flores ou Neve no topo
+    gluDeleteQuadric(q);
+}
+static void desenhaNeve(float raio) {
+    glDisable(GL_TEXTURE_2D);
+    glColor3f(0.89f, 0.89f, 1.0f); // neve
+    GLUquadric* q = gluNewQuadric();
+    gluSphere(q, raio, 3, 1);
+    gluDeleteQuadric(q);
+}
+
+// ─── copa ─────────────────────────
+static void desenhaCopa(float raioBase, float alturaBase, int comFruta, int estacao) {
+    glDisable(GL_TEXTURE_2D);
+
+    // copa por Estação
+    switch (estacao) {
+        case 0 : // Verão: Verde 
+            glColor3f(0.18f, 0.62f, 0.18f); 
+            break;
+        case 1: // Outono: Laranja
+            glColor3f(0.70f, 0.30f, 0.20f); 
+            break;
+        case 2: // Inverno: Copa Pálida 
+            glColor3f(0.70f, 0.75f, 0.80f); 
+            break;
+        case 3: // Primavera: Verde 
+            glColor3f(0.30f, 0.85f, 0.30f); 
+            break;
+    }
+    // Camada 1 (Base)
+    glPushMatrix();
+        glRotatef(45.0f, 0.0f, 1.0f, 0.0f);
+        desenhaLosango(raioBase, alturaBase);
+    glPopMatrix();
+
+    // Camada 2 (Meio)
+    if(estacao == 0) glColor3f(0.25f, 0.75f, 0.20f);
+    else if(estacao == 1) glColor3f(0.80f, 0.40f, 0.10f); 
+    else if(estacao == 2) glColor3f(0.75f, 0.80f, 0.85f); 
+    else if (estacao == 3) glColor3f(0.40f, 0.85f, 0.40f);
+    
+    glPushMatrix();
+        glTranslatef(0.0f, alturaBase * 0.50f, 0.0f);
+        desenhaLosango(raioBase * 0.75f, alturaBase * 0.82f);
+    glPopMatrix();
+
+    // Camada 3 (Topo)
+    if(estacao == 0) glColor3f(0.35f, 0.88f, 0.28f);
+    else if(estacao == 1) glColor3f(0.85f, 0.45f, 0.15f); 
+    else if(estacao == 2) glColor3f(0.80f, 0.85f, 0.90f); 
+
+    glPushMatrix();
+        glTranslatef(0.0f, alturaBase * 0.95f, 0.0f);
+        glRotatef(45.0f, 0.0f, 1.0f, 0.0f);
+        desenhaLosango(raioBase * 0.50f, alturaBase * 0.62f);
+    glPopMatrix();
+
+    // Extras
+    if (estacao == 2) {
+        // No inverno, adicionamos neve extra
+        glPushMatrix();
+            glTranslatef(0.0f, alturaBase * 1.5f, 0.0f);
+            desenhaNeve(raioBase * 0.25f);
+        glPopMatrix();
+    }
+
     float raioExtra = raioBase * 0.18f;
-    for (int i = 0; i < 3; i++) {
-        float angulo = (2.0f * M_PI * i) / 3;
+    for (int i = 0; i < 4; i++) {
+        float angulo = (2.0f * M_PI * i) / 4;
         float dist   = raioBase * 0.65f;
         float px = dist * cos(angulo);
         float pz = dist * sin(angulo);
-        float py = alturaBase * 0.40f;
+        float py = alturaBase * 0.60f;
 
         glPushMatrix();
             glTranslatef(px, py, pz);
-            if (estacao == 0 && comFruta) desenhafruta(raioExtra); // Verão + Estágio 3
-            else if (estacao == 3) desenhaFlor(raioExtra * 0.8f);   // Primavera
+            if (estacao == 0 && comFruta) {
+                desenhafruta(raioExtra);
+            } else if (estacao == 3) {
+                desenhaFlor(raioExtra * 0.5f);
+            } else if (estacao == 2) {
+                desenhaNeve(raioExtra * 0.3f); 
+            }
         glPopMatrix();
     }
 }
@@ -252,6 +308,64 @@ static void desenhaTroncoMorto(float altura, float raio, int nivel) {
         glRotatef(-45.0f, 0.0f, 1.0f, 0.0f);
         desenhaTroncoMorto(altura * 0.60f, raio * 0.65f, nivel - 1);
     glPopMatrix();
+}
+
+// ─── arvore_regar ─────────────────────────────────────────────────────
+// Chamada quando o jogador interage com a planta para regar.
+// So pode regar se a planta nao estiver morta.
+void arvore_regar() {
+    if (estagioPlantas == 4) return; // morta nao pode ser regada
+    regouEssaEstacao = 1;
+    printf("[Arvore] Regada! estacao=%d estagio=%d\n", estacaoAtual, estagioPlantas);
+}
+
+// ─── arvore_dormir ────────────────────────────────────────────────────
+// Chamada quando o jogador interage com a cama.
+// Logica:
+//   - Se regou: estagio avanca (max 3=madura)
+//   - Se nao regou: estagio regride; se ja era 0 (brotinho) morre
+//   - Sempre: avanca a estacao e reseta a flag de rega
+// Retorna 1 se a planta morreu, 0 caso contrario.
+int arvore_dormir() {
+    int morreu = 0;
+
+    if (estagioPlantas == 4) {
+        // ja esta morta, so avanca estacao
+        estacaoAtual = (estacaoAtual + 1) % 4;
+        regouEssaEstacao = 0;
+        return 0;
+    }
+
+    if (regouEssaEstacao) {
+        // avanca estagio (teto: 3 = madura com fruta)
+        if (estagioPlantas < 3) {
+            estagioPlantas++;
+        }
+        // reinicia animacao de crescimento para o novo estagio
+        growthScale = 0.01f;
+        bounceY     = 0.0f;
+    } else {
+        // nao regou: regride ou morre
+        if (estagioPlantas == 0) {
+            estagioPlantas = 4; // brotinho sem rega = morte
+            morreu = 1;
+        } else {
+            estagioPlantas--;
+            growthScale = 0.01f;
+            bounceY     = 0.0f;
+        }
+    }
+
+    // avanca estacao (loop: 0->1->2->3->0)
+    estacaoAtual = (estacaoAtual + 1) % 4;
+
+    // reseta flag de rega para a proxima estacao
+    regouEssaEstacao = 0;
+
+    printf("[Arvore] Dormiu! novo estagio=%d nova estacao=%d morreu=%d\n",
+           estagioPlantas, estacaoAtual, morreu);
+
+    return morreu;
 }
 
 // ─── desenharArvore — função pública, mesma assinatura do colega ──────
