@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #define M_PI    3.14159265358979323846
-#define N_PART  120
+#define N_PART  67
 
 // ─── Estrutura de particula 
 typedef struct {
@@ -27,15 +27,7 @@ static float ventoZ     = 0.0f;
 static float randf(float min, float max) {
     return min + ((float)rand() / (float)RAND_MAX) * (max - min);
 }
-void desenhaCirculo(float raio, int segmentos) {
-    glBegin(GL_TRIANGLE_FAN);
-    glVertex3f(0.0f, 0.0f, 0.0f); // Centro
-    for (int i = 0; i <= segmentos; i++) {
-        float angulo = i * 2.0f * M_PI / segmentos;
-        glVertex3f(cos(angulo) * raio, 0.0f, sin(angulo) * raio);
-    }
-    glEnd();
-}
+
 static void resetaParticula(Particula* p, float alturaMax) {
     p->x    = randf(-28.0f, 28.0f);
     p->y    = randf(alturaMax * 0.5f, alturaMax);
@@ -124,31 +116,138 @@ void definirCorCeu(int estacao) {
     }
 }
 static float tempoSol = 0.0f;
-
+void desenhaCirculo(float raio, int segmentos) {
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex3f(0.0f, 0.0f, 0.0f); // Centro
+    for (int i = 0; i <= segmentos; i++) {
+        float angulo = i * 2.0f * M_PI / segmentos;
+        glVertex3f(cos(angulo) * raio, 0.0f, sin(angulo) * raio);
+    }
+    glEnd();
+}
 void desenhaEsfera(float raio) {
-    glutSolidSphere(raio, 10, 10); 
-}\
+    glutSolidSphere(raio, 10, 10);
+}
+
+// ─── mundo_iluminacao_init ────────────────────────────────────────────
+// Habilita o sistema de iluminacao do OpenGL e configura GL_LIGHT0
+// como a fonte principal (sol/lua). Deve ser chamada UMA VEZ no init()
+// da main, DEPOIS de criar a janela GLUT.
+//
+// Por que GL_LIGHTING + GL_LIGHT0?
+//   O OpenGL fixo (sem shaders) oferece ate 8 luzes (GL_LIGHT0..7).
+//   GL_LIGHT0 e a mais comum para luz direcional/sol.
+//   Sem glEnable(GL_LIGHTING) as cores glColor3f sao usadas diretamente
+//   (flat shading); com ele, a cor final depende da normal da superficie
+//   e da posicao/cor da luz — dando volume aos objetos.
+//
+// Por que GL_COLOR_MATERIAL?
+//   Permite que glColor3f continue definindo a cor difusa/ambiente do
+//   material sem precisar chamar glMaterialfv a cada objeto. Pratico
+//   para projetos onde cada objeto ja tem sua propria cor definida.
+void mundo_iluminacao_init() {
+    // Ativa o pipeline de iluminacao do OpenGL
+    glEnable(GL_LIGHTING);
+
+    // Ativa a luz 0 (sera reposicionada a cada frame pelo sol/lua)
+    glEnable(GL_LIGHT0);
+
+    // GL_COLOR_MATERIAL: glColor3f passa a controlar o material difuso+ambiente
+    // sem isso, glColor3f seria ignorado quando a iluminacao esta ativa
+    glEnable(GL_COLOR_MATERIAL);
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+
+    // Normalizacao automatica das normais apos glScalef
+    // (sem isso, o glScalef distorce os calculos de iluminacao)
+    glEnable(GL_NORMALIZE);
+}
+
+// ─── desenhaSolLua ────────────────────────────────────────────────────
+// Orbita o sol (ou lua no inverno) ao redor do mundo usando tempoSol.
+// A posicao calculada e usada TANTO para desenhar a esfera
+// QUANTO para reposicionar GL_LIGHT0 — garantindo que a sombra e o
+// brilho dos objetos sempre venham da direcao visual do sol.
+//
+// Por que glLightfv com GL_POSITION a cada frame?
+//   No OpenGL de matriz fixa, a posicao da luz e transformada pela
+//   modelview no momento da chamada glLightfv. Por isso ela deve ser
+//   definida APOS o glLoadIdentity/gluLookAt, e ANTES de desenhar os
+//   objetos iluminados. Aqui fazemos isso dentro de mundo_desenhar().
+//
+// Por que w=1.0 no vetor de posicao?
+//   w=1.0 → luz posicional (ponto no espaco, gera sombreamento direcional).
+//   w=0.0 → luz direcional infinita (raios paralelos, sem atenuacao).
+//   Usamos w=1.0 para que a luz venha exatamente da esfera do sol.
 void desenhaSolLua(int estacao) {
-    tempoSol += 0.0002f; // velocidade
+    tempoSol += 0.0002f;
 
     float raioOrbita = 40.0f;
+    float x = cosf(tempoSol) * raioOrbita;
+    float y = sinf(tempoSol) * raioOrbita;
+    float posZ = -20.0f;
 
-    float x = cos(tempoSol) * raioOrbita;
-    float y = sin(tempoSol) * raioOrbita;
+    // ── Posiciona GL_LIGHT0 na posicao atual do sol/lua ──────────────
+    // w=1.0: luz pontual — a luz vem do ponto exato onde o sol esta
+    GLfloat luzPos[] = { x, y + 10.0f, posZ, 1.0f };
+    glLightfv(GL_LIGHT0, GL_POSITION, luzPos);
 
+    // ── Cor difusa: determina o "tom" de luz que incide nos objetos ──
+    // Verão/Primavera: luz quente amarela
+    // Outono:          luz alaranjada como por-do-sol
+    // Inverno:         luz fria azulada da lua
+    GLfloat difusa[4], ambiente[4];
+    switch (estacao) {
+        case 0: // verao: luz solar diurna quente
+            difusa[0]=1.0f;  difusa[1]=0.95f; difusa[2]=0.80f; difusa[3]=1.0f;
+            ambiente[0]=0.30f; ambiente[1]=0.32f; ambiente[2]=0.28f; ambiente[3]=1.0f;
+            break;
+        case 1: // outono: por do sol, luz alaranjada
+            difusa[0]=1.0f;  difusa[1]=0.65f; difusa[2]=0.30f; difusa[3]=1.0f;
+            ambiente[0]=0.28f; ambiente[1]=0.20f; ambiente[2]=0.15f; ambiente[3]=1.0f;
+            break;
+        case 2: // inverno: luz da lua, fria e fraca
+            difusa[0]=0.55f; difusa[1]=0.60f; difusa[2]=0.75f; difusa[3]=1.0f;
+            ambiente[0]=0.15f; ambiente[1]=0.18f; ambiente[2]=0.25f; ambiente[3]=1.0f;
+            break;
+        case 3: // primavera: luz clara e suave
+            difusa[0]=0.95f; difusa[1]=1.00f; difusa[2]=0.85f; difusa[3]=1.0f;
+            ambiente[0]=0.32f; ambiente[1]=0.35f; ambiente[2]=0.28f; ambiente[3]=1.0f;
+            break;
+        default:
+            difusa[0]=difusa[1]=difusa[2]=difusa[3]=1.0f;
+            ambiente[0]=ambiente[1]=ambiente[2]=0.3f; ambiente[3]=1.0f;
+    }
+
+    // GL_DIFFUSE: cor da luz que incide diretamente na superficie
+    glLightfv(GL_LIGHT0, GL_DIFFUSE,  difusa);
+
+    // GL_AMBIENT: luz ambiente global — evita que areas sem luz direta
+    // fiquem completamente pretas (simula luz indireta/reflexao difusa)
+    glLightfv(GL_LIGHT0, GL_AMBIENT,  ambiente);
+
+    // ── Quando o sol esta abaixo do horizonte (y<0): escurece tudo ──
+    // Simulamos a noite/entardecer reduzindo a intensidade da luz ambiente
+    if (y < 0.0f) {
+        float fator = 0.1f; // escuro maximo
+        GLfloat noite[] = { fator, fator, fator * 1.2f, 1.0f };
+        glLightfv(GL_LIGHT0, GL_AMBIENT, noite);
+        GLfloat difNoite[] = { fator*2, fator*2, fator*2.5f, 1.0f };
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, difNoite);
+    }
+
+    // ── Desenha a esfera visual do sol/lua ───────────────────────────
+    // glDisable(GL_LIGHTING) aqui porque a esfera do sol nao deve ser
+    // afetada pela propria luz que ela emite — ela sempre aparece brilhante
+    glDisable(GL_LIGHTING);
     glPushMatrix();
-        glTranslatef(x, y + 10.0f, -20.0f);
-
-        if (estacao == 2) {
-            // Lua (inverno)
-            glColor3f(0.85f, 0.85f, 0.9f);
-        } else {
-            // Sol
-            glColor3f(1.0f, 0.9f, 0.3f);
-        }
-
-        desenhaEsfera(2.5f); 
+        glTranslatef(x, y + 10.0f, posZ);
+        if (estacao == 2)
+            glColor3f(0.85f, 0.85f, 0.90f); // lua: branco azulado
+        else
+            glColor3f(1.0f, 0.92f, 0.30f);  // sol: amarelo quente
+        desenhaEsfera(2.5f);
     glPopMatrix();
+    glEnable(GL_LIGHTING); // reativa para os objetos do cenario
 }
 // ─── Chao por estacao 
 static void desenhaChao(int estacao) {
