@@ -302,10 +302,23 @@ void teclado(unsigned char key, int x, int y) {
 
 void update(int value) {
     arvore_update();
+    mundo_update(estacaoAtual);
     camera_processMovement();
     glutPostRedisplay();
     glutTimerFunc(16, update, 0);
+    
 }
+// ─── Mudancas na main.c para a iluminacao 
+//
+// 1. No init(), APOS camera_init(), adicionar:
+//
+//    mundo_iluminacao_init();
+//
+//    Por que aqui?
+//    glEnable(GL_LIGHTING) so funciona depois que a janela OpenGL
+//    foi criada (glutCreateWindow). O init() ja e chamado apos isso,
+//    entao e o lugar certo. Colocar antes de glutMainLoop garante
+//    que a luz esta configurada antes do primeiro frame ser desenhado.
 
 void init() {
     glEnable(GL_DEPTH_TEST);
@@ -317,6 +330,7 @@ void init() {
 
     arvore_init();
     camera_init();
+    mundo_iluminacao_init();
 }
 
 int main(int argc, char** argv) {
