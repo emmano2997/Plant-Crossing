@@ -1,14 +1,17 @@
 #include "../include/arvore.h"
 #include <math.h>
 #include <stdio.h>
-#include "stb_image.h"
 
 #define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #define M_PI 3.14159265358979323846
 
 GLuint texTronco;
 GLuint texFolha;
 
+int estacaoAtual;
+int regouEssaEstacao;
 
 float growthScale = 0.1f;
 float windOffset  = 0.0f;
@@ -116,49 +119,75 @@ static void desenhafruta(float raio) {
     glPopMatrix();
     gluDeleteQuadric(q);
 }
+static void desenhaFlor(float raio) {
+    glDisable(GL_TEXTURE_2D);
+    glColor3f(1.0f, 0.6f, 0.8f); // Rosa claro
+    GLUquadric* q = gluNewQuadric();
+    gluSphere(q, raio, 6, 6); // Uma esfera pequena como flor
+    gluDeleteQuadric(q);
+}
+
+static void desenhaNeve(float raio) {
+    glDisable(GL_TEXTURE_2D);
+    glColor3f(0.95f, 0.95f, 1.0f); // Branco neve
+    GLUquadric* q = gluNewQuadric();
+    gluSphere(q, raio, 6, 6);
+    gluDeleteQuadric(q);
+}
 
 // ─── Copa  ─────────
-static void desenhaCopa(float raioBase, float alturaBase, int comFruta) {
-    glDisable(GL_TEXTURE_2D);
+static void desenhaCopa(float raioBase, float alturaBase, int comFruta, int estacao) {
+glDisable(GL_TEXTURE_2D);
+    if (estacao != 2) {
+        switch (estacao) {
+            case 0: glColor3f(0.18f, 0.62f, 0.18f); break; // Verão: Verde
+            case 1: glColor3f(0.80f, 0.40f, 0.10f); break; // Outono: Laranja/Marrom
+            case 3: glColor3f(0.40f, 0.85f, 0.40f); break; // Primavera: Verde Claro
+        }
 
-    glColor3f(0.18f, 0.62f, 0.18f);
-    glPushMatrix();
-        glRotatef(45.0f, 0.0f, 1.0f, 0.0f);
-        desenhaLosango(raioBase, alturaBase);
-    glPopMatrix();
+        // Camada 1
+        glPushMatrix();
+            glRotatef(45.0f, 0.0f, 1.0f, 0.0f);
+            desenhaLosango(raioBase, alturaBase);
+        glPopMatrix();
 
-    glColor3f(0.25f, 0.75f, 0.20f);
-    glPushMatrix();
-        glTranslatef(0.0f, alturaBase * 0.50f, 0.0f);
-        desenhaLosango(raioBase * 0.75f, alturaBase * 0.82f);
-    glPopMatrix();
+        // Camada 2 (tom levemente diferente)
+        if(estacao == 0) glColor3f(0.25f, 0.75f, 0.20f);
+        glPushMatrix();
+            glTranslatef(0.0f, alturaBase * 0.50f, 0.0f);
+            desenhaLosango(raioBase * 0.75f, alturaBase * 0.82f);
+        glPopMatrix();
 
-    glColor3f(0.35f, 0.88f, 0.28f);
-    glPushMatrix();
-        glTranslatef(0.0f, alturaBase * 0.95f, 0.0f);
-        glRotatef(45.0f, 0.0f, 1.0f, 0.0f);
-        desenhaLosango(raioBase * 0.50f, alturaBase * 0.62f);
-    glPopMatrix();
+        // Camada 3
+        if(estacao == 0) glColor3f(0.35f, 0.88f, 0.28f);
+        glPushMatrix();
+            glTranslatef(0.0f, alturaBase * 0.95f, 0.0f);
+            glRotatef(45.0f, 0.0f, 1.0f, 0.0f);
+            desenhaLosango(raioBase * 0.50f, alturaBase * 0.62f);
+        glPopMatrix();
+    } else {
+        // Inverno: Apenas neve no topo
+        glPushMatrix();
+            glTranslatef(0.0f, 0.1f, 0.0f);
+            desenhaNeve(raioBase * 0.2f);
+        glPopMatrix();
+    }
 
-    if (!comFruta) return;
-
-    // frutas 
-    float raiofruta = raioBase * 0.18f;
+    // Extras: Frutas, Flores ou Neve no topo
+    float raioExtra = raioBase * 0.18f;
     for (int i = 0; i < 3; i++) {
         float angulo = (2.0f * M_PI * i) / 3;
         float dist   = raioBase * 0.65f;
-        float px     = dist * cos(angulo);
-        float pz     = dist * sin(angulo);
-        float py     = alturaBase * 0.40f;
+        float px = dist * cos(angulo);
+        float pz = dist * sin(angulo);
+        float py = alturaBase * 0.40f;
+
         glPushMatrix();
             glTranslatef(px, py, pz);
-            desenhafruta(raiofruta);
+            if (estacao == 0 && comFruta) desenhafruta(raioExtra); // Verão + Estágio 3
+            else if (estacao == 3) desenhaFlor(raioExtra * 0.8f);   // Primavera
         glPopMatrix();
     }
-    glPushMatrix();
-        glTranslatef(0.0f, alturaBase * 1.55f, 0.0f);
-        desenhafruta(raiofruta * 0.85f);
-    glPopMatrix();
 }
 
 // ─── Tronco vivo  ────────────────────
@@ -173,7 +202,7 @@ static void desenhaTronco(float altura, float raio, int nivel, int comFruta) {
 
     if (nivel == 0) {
         glDisable(GL_TEXTURE_2D);
-        desenhaCopa(altura * 1.5f, altura * 1.5f, comFruta);
+        desenhaCopa(altura * 1.5f, altura * 1.5f, comFruta, estacaoAtual);
         return;
     }
 

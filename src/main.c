@@ -59,7 +59,6 @@ int main(int argc, char** argv) {
     glutDisplayFunc(display);
     glutKeyboardFunc(camera_keyDown);       // ← callbacks da câmera
     glutKeyboardUpFunc(camera_keyUp);
-    glutKeyboardFunc();
     glutMouseFunc(camera_mouseButton);
     glutMotionFunc(camera_mouseMotion); 
     
