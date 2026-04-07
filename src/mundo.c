@@ -6,7 +6,7 @@
 #define M_PI    3.14159265358979323846
 #define N_PART  120
 
-// ─── Estrutura de particula ───────────────────────────────────────────
+// ─── Estrutura de particula 
 typedef struct {
     float x, y, z;
     float vx, vy, vz;
@@ -176,6 +176,29 @@ static void desenhaCercaUnidade() {
         glutSolidCube(1.0f);
     glPopMatrix();
 }
+void desenhaCirculo(float raio, int segmentos) {
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex3f(0.0f, 0.0f, 0.0f); // Centro
+    for (int i = 0; i <= segmentos; i++) {
+        float angulo = i * 2.0f * M_PI / segmentos;
+        glVertex3f(cos(angulo) * raio, 0.0f, sin(angulo) * raio);
+    }
+    glEnd();
+}
+void desenhaLago() {
+    glEnable(GL_BLEND); // Ativa transparência
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+    glColor4f(0.1f, 0.4f, 0.8f, 0.7f); // Azul (agua)
+
+    glPushMatrix();
+        glTranslatef(-22.0f, 0.02f, -22.0f); // Posicao
+        glScalef(1.5f, 1.0f, 1.0f); 
+        desenhaCirculo(5.0f, 30);
+    glPopMatrix();
+    
+    glDisable(GL_BLEND); // Desativa transparência para não afetar outros objetos
+}
 
 static void desenhaNeve() {
     glDisable(GL_TEXTURE_2D);
@@ -226,12 +249,93 @@ static void desenhaPetalas() {
     }
     glDisable(GL_BLEND);
 }
+void desenhaPedras() {
+    // Usamos uma semente diferente da vegetação para não sobrepor tudo
+    srand(76); 
 
+    for (int i = 0; i < 20; i++) { // Altere o '20' para a quantidade que desejar
+        float x = (float)(rand() % 58) - 29.0f; // Sorteia posição X
+        float z = (float)(rand() % 58) - 29.0f; // Sorteia posição Z
+
+        // EVITAR ÁREAS ESPECÍFICAS:
+        // Se a pedra cair dentro do caminho, pulamos para a próxima iteração
+        if (z > -0.5f && z < 2.5f && x > -16.0f && x < 16.0f) continue;
+        // Se cair dentro do lago
+        if (x < -16.0f && z < -16.0f) continue;
+
+        glPushMatrix();
+            glTranslatef(x, 0.05f, z);
+            
+            // Variar o tamanho de cada pedra para não ficarem iguais
+            float escala = 0.2f + (float)(rand() % 5) / 10.0f; 
+            glScalef(escala * 1.5f, escala * 0.5f, escala); 
+            
+            // Variar levemente a cor cinza
+            float tom = 0.4f + (float)(rand() % 3) / 10.0f;
+            glColor3f(tom, tom, tom);
+            
+            glutSolidSphere(1.0f, 8, 8);
+        glPopMatrix();
+    }
+}
+void desenhaVegetacao(int estacao) {
+    // Usamos semente fixa para que as flores não "pulem" de lugar a cada frame
+    srand(67); 
+
+    for (int i = 0; i < 50; i++) {
+        float x = (float)(rand() % 56) - 28.0f; // Espalha pelo mapa
+        float z = (float)(rand() % 56) - 28.0f;
+        
+        // Evita desenhar em cima do caminho (aproximadamente)
+        if (z > -1.0f && z < 3.0f && x > -16.0f && x < 16.0f) continue;
+        // Evita desenhar dentro do lago
+        if (x < -16.0f && z < -16.0f) continue;
+
+        // --- Desenha Grama (Pequenos Triângulos) ---
+        if (estacao == 2) // Inverno: Grama coberta de neve
+            glColor3f(0.8f, 0.8f, 0.85f);
+        else if (estacao == 1) // Outono: Grama seca
+            glColor3f(0.5f, 0.5f, 0.2f);
+        else // Primavera/Verão: Verde vivo
+            glColor3f(0.3f, 0.6f, 0.2f);
+
+        glBegin(GL_TRIANGLES);
+            glVertex3f(x - 0.1f, 0.01f, z);
+            glVertex3f(x + 0.1f, 0.01f, z);
+            glVertex3f(x, 0.3f, z); // Ponta da grama
+        glEnd();
+
+        // --- Desenha Flores (Pequenas Esferas) ---
+        int desenharFlor = (rand() % 5 == 0); // 20% de chance de ter flor
+
+        if (desenharFlor) {
+            if (estacao == 0) { // Primavera: Flores Coloridas
+                float r = (float)(rand() % 100) / 100.0f;
+                float g = (float)(rand() % 100) / 100.0f;
+                glColor3f(r, g, 1.0f); // Predominância de azul/roxo
+            } else if (estacao == 3) { // Verão: Flores Amarelas/Vermelhas
+                if (rand() % 2 == 0) glColor3f(1.0f, 0.9f, 0.0f); // Amarelo
+                else glColor3f(1.0f, 0.2f, 0.2f); // Vermelho
+            } else {
+                continue; // Outono/Inverno: Sem flores
+            }
+
+            glPushMatrix();
+                glTranslatef(x, 0.2f, z); // No topo da grama
+                glutSolidSphere(0.1f, 5, 5);
+            glPopMatrix();
+        }
+    }
+}
 void mundo_desenhar(int estacao) {
     inicializaParticulas();
 
     desenhaChao(estacao);
+    desenhaLago();
     desenhaCaminho(estacao);
+
+    desenhaPedras(); 
+    desenhaVegetacao(estacao); 
     desenhaFolhasNoChao(estacao);
 
     // cercas
