@@ -18,7 +18,7 @@ float windOffset  = 0.0f;
 float bounceY     = 0.0f;
 int   estagioPlantas = 0;
 
-static float rotAngle = 0.0f; // controla câmera/vento internamente
+static float rotAngle = 0.0f; // controla vento 
 
 // textura  
 static GLuint carregaTextura(const char* arquivo) {
@@ -136,7 +136,7 @@ static void desenhaFlor(float raio) {
     int numPetalas = 5;
 
     for (int i = 0; i < numPetalas; i++) {
-        float ang = (2.0f * 3.14159f * i) / numPetalas;
+        float ang = (2.0f * M_PI * i) / numPetalas;
 
         glPushMatrix();
 
@@ -152,7 +152,7 @@ static void desenhaFlor(float raio) {
         // girar cada pétala para fora
         glRotatef(-ang * 180.0f / 3.14159f, 0.0f, 1.0f, 0.0f);
 
-        glColor3f(1.0f, 0.4f, 0.7f);
+        glColor3f(1.0f, 0.4f, 0.7f); // cor da flor rosa
         glScalef(0.8f, 0.2f, 1.2f);
         gluSphere(q, raio * 0.4f, 6, 6); 
 
@@ -225,8 +225,8 @@ static void desenhaCopa(float raioBase, float alturaBase, int comFruta, int esta
         glPopMatrix();
     }
 
-    float raioExtra = raioBase * 0.18f;
-    for (int i = 0; i < 4; i++) {
+    float raioExtra = raioBase * 0.16f;
+    for (int i = 0; i < 5; i++) {
         float angulo = (2.0f * M_PI * i) / 4;
         float dist   = raioBase * 0.65f;
         float px = dist * cos(angulo);
