@@ -7,11 +7,11 @@
 GLuint texMontanha;
 
 int verificaColisao(float proxX, float proxZ) {
-    // 1. Limites das Cercas Externas (Baseado no seu loop de -30 a 30)
+    // posicao das cercas
     if (proxX > 29.0f || proxX < -29.0f) return 1;
     if (proxZ > 29.0f || proxZ < -29.0f) return 1;
     
-    return 0; // 
+    return 0; 
 }
 
 void desenhaChao(int estacao) {
@@ -25,7 +25,7 @@ void desenhaChao(int estacao) {
         glVertex3f( 30.0f, 0.0f, -30.0f);
     glEnd();
 
-    // Chao estilizado
+    // Chao 
     glColor3f(0.42f, 0.74f, 0.29f);
     for (int i = -5; i <= 5; i++) {
         glBegin(GL_QUADS);
@@ -37,24 +37,28 @@ void desenhaChao(int estacao) {
     }
 }
 void desenhaCaminho(int estacao) {
-    if (estacao == 2) glColor3f(0.8f, 0.8f, 0.9f); // Caminho coberto de neve
+    if (estacao == 2) glColor3f(0.8f, 0.8f, 0.9f); // Caminho com neve
     else glColor3f(0.6f, 0.5f, 0.4f); // Terra 
 
+    glPushMatrix();
+        glTranslatef(0.0f, 0.0f, -1.0f); 
+
     glBegin(GL_QUADS);
-        glVertex3f(-10.0f, 0.02f, 0.0f); // Da casa...
-        glVertex3f( 10.0f, 0.02f, 0.0f); // ...até a árvore
-        glVertex3f( 10.0f, 0.02f, 1.0f);
-        glVertex3f(-10.0f, 0.02f, 1.0f);
+        glVertex3f(-17.0f, 0.02f, 0.0f); // Casa
+        glVertex3f( 17.0f, 0.02f, 0.0f); // árvore
+        glVertex3f( 17.0f, 0.02f, 2.0f);
+        glVertex3f(-17.0f, 0.02f, 2.0f);
     glEnd();
+    glPopMatrix();
 }
 
 void desenhaFolhasNoChao(int estacao) {
-    if (estacao != 1) return; // Só desenha no Outono
+    if (estacao != 1) return;
 
     glColor3f(0.7f, 0.3f, 0.0f); // Folhas laranjas
     for (int i = 0; i < 15; i++) {
         glPushMatrix();
-            glTranslatef(8.0f + (i % 5), 0.02f, -2.0f + (i / 3));
+            glTranslatef(11.5f + (i % 5), 0.02f, -2.0f + (i / 3));
             glRotatef(i * 30, 0, 1, 0);
             glScalef(0.2f, 0.01f, 0.3f);
             glutSolidSphere(1.0f, 5, 5);
@@ -97,31 +101,12 @@ void desenhaNeveCaindo() {
     }
     glEnd();
 }
-void desenhaMontanha(float x, float z, float largura, float altura) {
-    glColor3f(0.35f, 0.83f, 0.83f); 
-
-    glBegin(GL_TRIANGLES);
-        //  Esquerda
-        glTexCoord2f(0.0f, 0.0f); 
-        glVertex3f(x, 0.0f, z + largura/2);
-
-        //  Direita
-        glTexCoord2f(1.0f, 0.0f);
-        glVertex3f(x, 0.0f, z - largura/2);
-
-        //  Pico Central
-        glTexCoord2f(0.5f, 1.0f);
-        glVertex3f(x, altura, z);
-    glEnd();
-
-    glDisable(GL_TEXTURE_2D);
-}
 
 void mundo_desenhar(int estacao) {
     desenhaChao(estacao);
     desenhaCaminho(estacao);
     desenhaFolhasNoChao(estacao);
-    desenhaMontanha(-32.0f, 0.0f, 80.0f, 40.0f);
+    //desenhaMontanha(-32.0f, 0.0f, 80.0f, 40.0f);
 
     for (float i = -30.0f; i < 30.0f; i += 1.0f) { // esquerda casa 
         glPushMatrix();
