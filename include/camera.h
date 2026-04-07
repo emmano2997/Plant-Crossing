@@ -20,4 +20,9 @@ void camera_keyUp(unsigned char key, int x, int y);
 void camera_mouseMotion(int x, int y);
 void camera_mouseButton(int button, int state, int x, int y);
 
+// Controle de Animação
+extern int isSleepingAnimation;
+void camera_startSleepAnimation();
+void camera_updateAnimation();
+
 #endif

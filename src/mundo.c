@@ -211,6 +211,90 @@ static void desenhaFolhasNoChao(int estacao) { //outono
         glPopMatrix();
     }
 }
+
+// --- Desenha um regador vermelho metalizado low-poly ---
+void desenharRegador(float x, float y, float z) {
+    glPushMatrix();
+    glTranslatef(x, y, z);
+    
+    // Escala menor (60% do tamanho)
+    glScalef(0.6f, 0.6f, 0.6f);
+    
+    // Instancia o objeto Quadric do GLU
+    GLUquadric* q = gluNewQuadric();
+    
+    // --- CORPO PRINCIPAL (Oco com Água e Meia-Tampa) ---
+    glPushMatrix();
+        glRotatef(-90, 1, 0, 0); // Vira o cilindro para ficar em pé
+        
+        // Parede do regador (Vermelho Metálico)
+        glColor3f(0.7f, 0.1f, 0.15f);
+        gluCylinder(q, 0.35, 0.35, 0.7, 12, 2); 
+        
+        // Fundo do regador
+        glPushMatrix(); 
+            glRotatef(180, 1, 0, 0); 
+            gluDisk(q, 0.0, 0.35, 12, 1); 
+        glPopMatrix();
+        
+        // Meia-tampa superior corrigida (cobre a metade traseira)
+        glPushMatrix();
+            glTranslatef(0.0f, 0.0f, 0.7f); 
+            // Começa em 270 graus em vez de 90 para cobrir a metade oposta
+            gluPartialDisk(q, 0.0, 0.35, 12, 1, 270.0, 180.0);
+        glPopMatrix();
+        
+        // Água interna (Azul) na metade da altura
+        glColor3f(0.1f, 0.4f, 0.8f);
+        glPushMatrix(); 
+            glTranslatef(0.0f, 0.0f, 0.35f); 
+            gluDisk(q, 0.0, 0.34, 12, 1); 
+        glPopMatrix();
+    glPopMatrix();
+    
+    // Retorna a cor vermelha para os próximos objetos
+    glColor3f(0.7f, 0.1f, 0.15f);
+    
+    // --- ALÇA VERTICAL ---
+    glPushMatrix();
+        // Posicionada na parede traseira (-0.35)
+        glTranslatef(0.0f, 0.35f, -0.35f); 
+        glRotatef(90, 0, 1, 0); 
+        glutSolidTorus(0.05, 0.25, 6, 8); // Desenhada inteira, a meia-tampa esconde a parte de dentro
+    glPopMatrix();
+    
+    // --- BICO LONGO E CRIVO ---
+    glPushMatrix();
+        glTranslatef(0.0f, 0.2f, 0.35f); 
+        glRotatef(-45.0f, 1, 0, 0); // Aponta em diagonal para cima
+        
+        // Cano mais longo
+        gluCylinder(q, 0.05, 0.05, 0.7, 8, 1);
+        
+        // Vai para a ponta do cano
+        glTranslatef(0.0f, 0.0f, 0.7f); 
+        
+        // Ativa o corte da semi-esfera do crivo
+        double clip_crivo_eq[4] = {0.0, 0.0, -1.0, 0.0}; 
+        glClipPlane(GL_CLIP_PLANE0, clip_crivo_eq);
+        glEnable(GL_CLIP_PLANE0);
+        
+        // Esfera base do crivo
+        glutSolidSphere(0.12, 8, 8);
+        
+        // Desliga o corte do crivo
+        glDisable(GL_CLIP_PLANE0); 
+        
+        // Tampa plana do crivo (Cinza escuro)
+        glColor3f(0.2f, 0.2f, 0.2f); 
+        gluDisk(q, 0.0, 0.12, 8, 1);
+        
+    glPopMatrix();
+    
+    gluDeleteQuadric(q); // Libera a memória
+    glPopMatrix();
+}
+
 static void desenhaCercaUnidade() {
     glColor3f(0.50f, 0.35f, 0.05f);
     glPushMatrix();

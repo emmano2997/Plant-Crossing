@@ -23,9 +23,12 @@ static int mouseButtonHeld = 0;
 static int lastMouseX = 400, lastMouseY = 300;
 static int firstMouse = 1;
 
-// --- NOVAS VARIÁVEIS DE ESTADO ---
 static int isFreeCamera = 0; // 0 = Modo Jogador, 1 = Modo Livre
 static float playerHeight = 1.5f; // Altura padrão do jogador no chão
+
+// --- VARIÁVEIS DE ANIMAÇÃO ---
+int isSleepingAnimation = 0;
+static float animProgress = 0.0f;
 
 void camera_init() {
     camX = 0.0f; camY = playerHeight; camZ = 15.0f;
@@ -49,8 +52,68 @@ static void getRight(float *rx, float *rz) {
     *rz =  fx;
 }
 
+void camera_startSleepAnimation() {
+    isSleepingAnimation = 1;
+    animProgress = 0.0f;
+    isInsideInterior = 0; // Força a câmera para o mundo exterior
+}
+
+void camera_updateAnimation() {
+    if (!isSleepingAnimation) return;
+
+    animProgress += 0.005f; // Velocidade da animação (0.005 dá uns 3.3 segundos a 60FPS)
+    
+    if (animProgress >= 1.0f) {
+        // FIM DA ANIMAÇÃO - Teleporta de volta para dentro do quarto
+        isSleepingAnimation = 0;
+        isInsideInterior = 1;
+        
+        // Posição: Ao lado da cama (-1.5) e alinhado com o centro dela (-2.5)
+        camX = -1.5f; 
+        camY = -50.0f + playerHeight; 
+        camZ = -2.5f; 
+        
+        // Olha para a porta (Porta interna fica em X=0, Z=5)
+        float dx = 0.0f - camX;
+        float dz = 5.0f - camZ;
+        camYaw = atan2(dz, dx) * 180.0f / M_PI;
+        camPitch = 0.0f;
+        return;
+    }
+
+    // --- MATEMÁTICA DO REDEMOINHO (ESPIRAL 3D) ---
+    float hx = -10.0f, hz = 0.0f; // Centro do redemoinho (A Casa)
+    
+    // Raio diminui de 28.0 (atrás da árvore em X=15) até 2.0 (porta da casa em X=-8)
+    float radius = 28.0f * (1.0f - animProgress) + 2.0f * animProgress;
+    
+    // Ângulo vai de 0 até 2*PI (Uma volta completa ao redor do mundo)
+    float angle = animProgress * 2.0f * M_PI; 
+    
+    // Altura começa em 12.0 (vista aérea) e desce até a altura do jogador (3.0)
+    camY = 12.0f * (1.0f - animProgress) + playerHeight * animProgress;
+
+    // Aplica as equações paramétricas polares
+    camX = hx + radius * cos(angle);
+    camZ = hz + radius * sin(angle);
+
+    // Força a câmera a sempre olhar para o centro da casa durante o redemoinho
+    float lookX = -10.0f, lookY = 2.0f, lookZ = 0.0f;
+    float dx = lookX - camX;
+    float dy = lookY - camY;
+    float dz = lookZ - camZ;
+    
+    camYaw = atan2(dz, dx) * 180.0f / M_PI;
+    float distXZ = sqrt(dx*dx + dz*dz);
+    camPitch = atan2(dy, distXZ) * 180.0f / M_PI;
+}
+
 void camera_processMovement() {
-    if (isFreeCamera) {
+    if (isSleepingAnimation) {
+        camera_updateAnimation();
+        return; // BLOQUEIA ANDAR
+
+    }else if (isFreeCamera) {
         // --- MODO LIVRE (Voo) ---
         float fx, fy, fz, rx, rz;
         camera_getFront(&fx, &fy, &fz);
@@ -126,7 +189,9 @@ int camera_canInteractWithDoor() {
 }
 
 void camera_keyDown(unsigned char key, int x, int y) {
-if (key == 27) exit(0);
+    if (key == 27) exit(0);
+
+    if (isSleepingAnimation) return; // BLOQUEIA BOTÕES DO TECLADO DURANTE ANIMAÇÃO
     
     // --- LÓGICA DE TELETRANSPORTE (TECLA Z) ---
     if ((key == 'z' || key == 'Z') && !keys[(int)key]) {
@@ -175,6 +240,8 @@ void camera_keyUp(unsigned char key, int x, int y) {
 }
 
 void camera_mouseButton(int button, int state, int x, int y) {
+    if (isSleepingAnimation) return; // BLOQUEIA OLHAR AO REDOR DURANTE ANIMAÇÃO
+
     if (button == GLUT_LEFT_BUTTON) {
         mouseButtonHeld = (state == GLUT_DOWN);
         if (mouseButtonHeld) {

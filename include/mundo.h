@@ -2,5 +2,6 @@
 #define MUNDO_H
 
 void mundo_desenhar(int estacao);
+void desenharRegador(float x, float y, float z);
 
 #endif

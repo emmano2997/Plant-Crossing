@@ -97,6 +97,23 @@ int checkWorldCollision(float px, float pz) {
         // Parede Frontal (Pedaço direito da porta)
         if (IN_BOX(lx, lz, 0.5f - PR, W + PR, D - WT - PR, D + PR)) return 1;
 
+        // --- COLISÃO DA ÁRVORE (Cilindro) ---
+        // Calcula a distância do jogador até o centro da árvore
+        float distArvore = sqrt((px - ARVORE_X)*(px - ARVORE_X) + (pz - ARVORE_Z)*(pz - ARVORE_Z));
+        float raioTronco = 0.5f; // Raio físico estimado do tronco
+        
+        // Se a distância for menor que o tronco + a barriga do jogador (PR), colide!
+        if (distArvore < raioTronco + PR) return 1;
+
+        // --- COLISÃO DAS CERCAS (Limites do Mundo) ---
+        // Como o mundo vai de -30 a 30, limitamos o jogador em um quadrado de ±29.0
+        float limiteMundo = 29.0f; 
+        
+        if (px + PR > limiteMundo) return 1;  // Bateu na cerca Direita
+        if (px - PR < -limiteMundo) return 1; // Bateu na cerca Esquerda
+        if (pz + PR > limiteMundo) return 1;  // Bateu na cerca Frontal
+        if (pz - PR < -limiteMundo) return 1; // Bateu na cerca Traseira
+
         return 0; 
     }
 }
@@ -165,6 +182,26 @@ int camera_canInteractWithBed() {
     return 0; // Muito longe ou do lado de fora
 }
 
+// --- Checa se o jogador está perto da árvore ---
+int camera_canInteractWithTree() {
+    extern float camX, camZ;
+    extern int isInsideInterior;
+
+    // Só pode interagir com a árvore se estiver do lado de fora
+    if (!isInsideInterior) {
+        float dx = camX - ARVORE_X;
+        float dz = camZ - ARVORE_Z;
+        float distTree = sqrt(dx*dx + dz*dz);
+        
+        float raioInteracaoArvore = 4.0f; // Distância para alcançar a planta
+
+        if (distTree <= raioInteracaoArvore) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
@@ -178,65 +215,88 @@ void display() {
     // Árvore
     desenharArvore(ARVORE_X, ARVORE_Y, ARVORE_Z, ARVORE_ROT);
 
+    desenharRegador(ARVORE_X + 0.5f, ARVORE_Y, ARVORE_Z -0.8f);
+
     // Casa
     desenharCasa(CASA_X, CASA_Y, CASA_Z, CASA_ROT);
     // Desenha o interior expandido lá embaixo (Y = -50)
     desenharInteriorExpandido(0.0f, -50.0f, 0.0f);
 
-// --- DESENHO DO HUD / UI ---
+    // --- DESENHO DO HUD / UI ---
+    extern int isSleepingAnimation;
     int screenHeight = glutGet(GLUT_WINDOW_HEIGHT);
 
-    // 1. Checa se o jogador está na distância da porta
-    if (camera_canInteractWithDoor()) {
-        glColor3f(0.0f, 0.0f, 0.0f); 
-        if (isInsideInterior) {
-            renderText2D(21.0f, screenHeight - 39.0f, "'Z' para Sair");
-        } else {
-            renderText2D(21.0f, screenHeight - 39.0f, "'Z' para Entrar");
+    if (!isSleepingAnimation) {
+        // 1. Interação com a Porta
+        if (camera_canInteractWithDoor()) {
+            glColor3f(0.0f, 0.0f, 0.0f); 
+            if (isInsideInterior) renderText2D(21.0f, screenHeight - 39.0f, "'Z' para Sair");
+            else renderText2D(21.0f, screenHeight - 39.0f, "'Z' para Entrar");
+
+            glColor3f(1.0f, 1.0f, 0.0f); 
+            if (isInsideInterior) renderText2D(20.0f, screenHeight - 40.0f, "'Z' para Sair");
+            else renderText2D(20.0f, screenHeight - 40.0f, "'Z' para Entrar");
         }
 
-        glColor3f(1.0f, 1.0f, 0.0f); 
-        if (isInsideInterior) {
-            renderText2D(20.0f, screenHeight - 40.0f, "'Z' para Sair");
-        } else {
-            renderText2D(20.0f, screenHeight - 40.0f, "'Z' para Entrar");
+        // 2. Interação com a Cama
+        if (camera_canInteractWithBed()) {
+            glColor3f(0.0f, 0.0f, 0.0f); 
+            renderText2D(21.0f, screenHeight - 69.0f, "'F' para Dormir");
+            
+            glColor3f(1.0f, 1.0f, 0.0f); 
+            renderText2D(20.0f, screenHeight - 70.0f, "'F' para Dormir");
         }
-    }
 
-    // 2. Checa se o jogador está na distância da cama
-    if (camera_canInteractWithBed()) {
-        // Colocamos o Y em -70 para ficar na linha de baixo do texto da porta
-        glColor3f(0.0f, 0.0f, 0.0f); 
-        renderText2D(21.0f, screenHeight - 69.0f, "'F' para Dormir");
-        
-        glColor3f(1.0f, 1.0f, 0.0f); 
-        renderText2D(20.0f, screenHeight - 70.0f, "'F' para Dormir");
+        // 3. Interação com a Árvore
+        // Acessa as variáveis de estado da planta que estão em arvore.h
+        extern int regouEssaEstacao;
+        extern int estagioPlantas;
+
+        if (camera_canInteractWithTree() && !regouEssaEstacao && estagioPlantas != 4) {
+            // Colocamos o Y mais para baixo (-100) para não encavalar com os outros textos
+            glColor3f(0.0f, 0.0f, 0.0f); 
+            renderText2D(21.0f, screenHeight - 99.0f, "'R' para Regar");
+            
+            glColor3f(0.2f, 0.8f, 1.0f); // Azul claro para combinar com a água!
+            renderText2D(20.0f, screenHeight - 100.0f, "'R' para Regar");
+        }
     }
 
     glutSwapBuffers();
 }
 
 void teclado(unsigned char key, int x, int y) {
+    // Impede o jogador de tentar regar ou dormir DE NOVO enquanto o mundo gira
+    extern int isSleepingAnimation;
+    if (isSleepingAnimation) return; 
+
     switch (key) {
         case 'r': 
-            // Jogador regou a planta
-            arvore_regar();
+        case 'R':
+            if (camera_canInteractWithTree()) {
+                arvore_regar();
+            } else {
+                printf("Voce precisa chegar mais perto da arvore para rega-la!\n");
+            }
             break;
  
-        case 'f':  {
-            // Jogador dormiu — passa a estacao (SÓ SE ESTIVER PERTO DA CAMA)
+        case 'f': 
+        case 'F': {
             if (camera_canInteractWithBed()) {
                 int morreu = arvore_dormir();
                 if (morreu) {
                     printf("Sua planta morreu! Tente novamente.\n");
                 }
+                
+                // INICIA A CUTSCENE AQUI
+                camera_startSleepAnimation();
+                
             } else {
                 printf("Voce precisa estar perto da sua cama para dormir!\n");
             }
             break;
         }
     }
-    // repassa para a camera
     camera_keyDown(key, x, y);
 }
 
