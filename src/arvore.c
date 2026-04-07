@@ -8,7 +8,6 @@
 #define M_PI 3.14159265358979323846
 
 GLuint texTronco;
-GLuint texFolha;
 
 int estacaoAtual;
 int regouEssaEstacao;
@@ -45,7 +44,6 @@ static GLuint carregaTextura(const char* arquivo) {
 
 void arvore_init() {
     texTronco = carregaTextura("texture/log-texture-brown.jpg");
-    texFolha  = carregaTextura("texture/leaf-texture.jpeg");
 
     // estado inicial: brotinho no verao, ainda nao regou
     estagioPlantas   = 0;
@@ -287,7 +285,7 @@ static void desenhaTronco(float altura, float raio, int nivel, int comFruta) {
     glPopMatrix();
 }
 
-// ─── Tronco morto  ───────────────────────────
+// ─── Tronco morto  
 static void desenhaTroncoMorto(float altura, float raio, int nivel) {
     if (nivel < 0) return;
 
@@ -299,7 +297,7 @@ static void desenhaTroncoMorto(float altura, float raio, int nivel) {
     if (nivel == 0) return;
 
     glPushMatrix();
-        glRotatef( 35.0f, 0.0f, 0.0f, 1.0f);
+        glRotatef( 35.0f, 0.0f, 1.0f, 1.0f);
         glRotatef( 45.0f, 0.0f, 1.0f, 0.0f);
         desenhaTroncoMorto(altura * 0.60f, raio * 0.65f, nivel - 1);
     glPopMatrix();
@@ -310,7 +308,7 @@ static void desenhaTroncoMorto(float altura, float raio, int nivel) {
     glPopMatrix();
 }
 
-// ─── arvore_regar ─────────────────────────────────────────────────────
+// ─── arvore_regar 
 // Chamada quando o jogador interage com a planta para regar.
 // So pode regar se a planta nao estiver morta.
 void arvore_regar() {
@@ -319,7 +317,7 @@ void arvore_regar() {
     printf("[Arvore] Regada! estacao=%d estagio=%d\n", estacaoAtual, estagioPlantas);
 }
 
-// ─── arvore_dormir ────────────────────────────────────────────────────
+// ─── arvore_dormir 
 // Chamada quando o jogador interage com a cama.
 // Logica:
 //   - Se regou: estagio avanca (max 3=madura)
@@ -368,7 +366,7 @@ int arvore_dormir() {
     return morreu;
 }
 
-// ─── desenharArvore — função pública, mesma assinatura do colega ──────
+// ─── desenharArvore — 
 // Estágios: 0=brotinho  1=jovem  2=adulta  3=madura(+fruta)  4=morta
 void desenharArvore(float x, float y, float z, float rotacao) {
     glPushMatrix();

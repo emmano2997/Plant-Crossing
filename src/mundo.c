@@ -298,9 +298,9 @@ void desenhaPedras() {
     // Usamos uma semente diferente da vegetação para não sobrepor tudo
     srand(76); 
 
-    for (int i = 0; i < 20; i++) { // Altere o '20' para a quantidade que desejar
-        float x = (float)(rand() % 58) - 29.0f; // Sorteia posição X
-        float z = (float)(rand() % 58) - 29.0f; // Sorteia posição Z
+    for (int i = 0; i < 20; i++) { // Sorteia posição X e Z
+        float x = (float)(rand() % 58) - 29.0f; 
+        float z = (float)(rand() % 58) - 29.0f; 
 
         // EVITAR ÁREAS ESPECÍFICAS:
         // Se a pedra cair dentro do caminho, pulamos para a próxima iteração
@@ -336,7 +336,7 @@ void desenhaVegetacao(int estacao) {
         // Evita desenhar dentro do lago
         if (x < -16.0f && z < -16.0f) continue;
 
-        // --- Desenha Grama (Pequenos Triângulos) ---
+        // Desenha Grama 
         if (estacao == 2) // Inverno: Grama coberta de neve
             glColor3f(0.8f, 0.8f, 0.85f);
         else if (estacao == 1) // Outono: Grama seca
