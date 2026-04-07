@@ -1,7 +1,7 @@
 #include <GL/glut.h>
 #include "../include/camera.h"
 #include "../include/arvore.h"
-#include "../include/casa.h" 
+#include "../include/casa.h"    
 
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -44,6 +44,7 @@ void init() {
     gluPerspective(45.0, 800.0/600.0, 1.0, 100.0);
     glMatrixMode(GL_MODELVIEW);
 
+    arvore_init();
     camera_init();
 }
 
@@ -58,9 +59,12 @@ int main(int argc, char** argv) {
     glutDisplayFunc(display);
     glutKeyboardFunc(camera_keyDown);       // ← callbacks da câmera
     glutKeyboardUpFunc(camera_keyUp);
+    glutKeyboardFunc();
     glutMouseFunc(camera_mouseButton);
     glutMotionFunc(camera_mouseMotion); 
+    
     glutTimerFunc(16, update, 0);
+   
 
     glutMainLoop();
     return 0;
