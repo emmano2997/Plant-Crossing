@@ -1,11 +1,86 @@
 #include <GL/glut.h>
 #include <stdio.h>
+#include <math.h>
+
 #include "../include/camera.h"
 #include "../include/arvore.h"
-#include "../include/casa.h"    
-#include "../include/mundo.h"
+#include "../include/casa.h"
+#include "../include/casa_interior.h"  
 
-extern int estacaoAtual; 
+#ifndef M_PI
+#define M_PI        3.14159265358979323846
+#endif
+
+#define CASA_X      -15.0f
+#define CASA_Y      0.0f
+#define CASA_Z      0.0f
+#define CASA_ROT    90.0f
+
+#define ARVORE_X    15.0f
+#define ARVORE_Y    0.0f
+#define ARVORE_Z    0.0f
+#define ARVORE_ROT  0.0f
+
+// Macro auxiliar para verificar se o ponto está dentro de uma caixa retangular
+#define IN_BOX(x, z, minX, maxX, minZ, maxZ) \
+    ((x) > (minX) - PR && (x) < (maxX) + PR && \
+     (z) > (minZ) - PR && (z) < (maxZ) + PR)
+
+
+// Função que o camera.c chama para saber se pode andar
+int checkWorldCollision(float px, float pz) {
+    extern float camY;
+
+    // Raio de colisão do jogador (espessura do corpo)
+    float PR = 0.6f; 
+
+    if (camY < -25.0f) {
+        // --- COLISÃO DO INTERIOR (SALA 10x10) ---
+        // A sala expandida está centralizada em (0, -50, 0) com meia-largura 5.0
+        float tamanho = 5.0f;
+
+        // Verificamos se a posição da câmera + o seu raio ultrapassa as paredes
+        // Se X + raio > 5.0 (Parede Direita)
+        if (px + PR + 0.6f >  tamanho) return 1;
+        // Se X - raio < -5.0 (Parede Esquerda)
+        if (px - PR - 0.6f < -tamanho) return 1;
+        // Se Z + raio > 5.0 (Parede Frontal)
+        if (pz + PR + 0.6f >  tamanho) return 1;
+        // Se Z - raio < -5.0 (Parede Traseira)
+        if (pz - PR - 0.6f < -tamanho) return 1;
+
+        return 0;
+    } else {
+        // --- COLISÃO DO EXTERIOR (CASA) ---
+        float dx = px - CASA_X;
+        float dz = pz - CASA_Z;
+        
+        float rad = -CASA_ROT * (float)M_PI / 180.0f;
+        float lx = dx * cosf(rad) - dz * sinf(rad);
+        float lz = dx * sinf(rad) + dz * cosf(rad);
+
+        float W = 2.0f;
+        float D = 2.0f;
+        float WT = 0.2f;
+
+        // Parede Esquerda
+        if (IN_BOX(lx, lz, -W - PR, -W + WT + PR, -D - PR, D + PR)) return 1;
+        
+        // Parede Direita
+        if (IN_BOX(lx, lz, W - WT - PR, W + PR, -D - PR, D + PR)) return 1;
+        
+        // Parede Traseira
+        if (IN_BOX(lx, lz, -W - PR, W + PR, -D - PR, -D + WT + PR)) return 1;
+        
+        // Parede Frontal (Pedaço esquerdo da porta)
+        if (IN_BOX(lx, lz, -W - PR, -0.5f + PR, D - WT - PR, D + PR)) return 1;
+        
+        // Parede Frontal (Pedaço direito da porta)
+        if (IN_BOX(lx, lz, 0.5f - PR, W + PR, D - WT - PR, D + PR)) return 1;
+
+        return 0; 
+    }
+}
 
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -18,11 +93,12 @@ void display() {
     mundo_desenhar(estacaoAtual);
 
     // Árvore
-    desenharArvore(10.0f, 0.0f, 0.0f, 0.0f);
+    desenharArvore(ARVORE_X, ARVORE_Y, ARVORE_Z, ARVORE_ROT);
 
     // Casa
-    //            x       y     z       rotação em graus (eixo Y)
-    desenharCasa(-10.0f, 0.2f, 0.0f, 90.0f);
+    desenharCasa(CASA_X, CASA_Y, CASA_Z, CASA_ROT);
+    // Desenha o interior expandido lá embaixo (Y = -50)
+    desenharInteriorExpandido(0.0f, -50.0f, 0.0f);
 
     glutSwapBuffers();
 }

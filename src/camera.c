@@ -7,21 +7,32 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+static float savedX, savedY, savedZ, savedYaw;
+static int isInsideInterior = 0;
+
+extern int checkWorldCollision(float x, float z);
+
 // Definição das variáveis externas
 float camX = 0.0f, camY = 3.0f, camZ = 15.0f;
 float camYaw = -90.0f, camPitch = 0.0f;
 float camSpeed = 0.2f;
 float sensitivity = 0.15f;
 int   keys[256] = {0};
-static int mouseButtonHeld = 0;
 
+// Variáveis de controle do mouse e modo de câmera
+static int mouseButtonHeld = 0;
 static int lastMouseX = 400, lastMouseY = 300;
 static int firstMouse = 1;
 
+// --- NOVAS VARIÁVEIS DE ESTADO ---
+static int isFreeCamera = 0; // 0 = Modo Jogador, 1 = Modo Livre
+static float playerHeight = 1.5f; // Altura padrão do jogador no chão
+
 void camera_init() {
-    camX = 0.0f; camY = 3.0f; camZ = 15.0f;
+    camX = 0.0f; camY = playerHeight; camZ = 15.0f;
     camYaw = -90.0f; camPitch = 0.0f;
     firstMouse = 1;
+    isFreeCamera = 0; // Inicia como jogador
 }
 
 void camera_getFront(float *fx, float *fy, float *fz) {
@@ -40,16 +51,49 @@ static void getRight(float *rx, float *rz) {
 }
 
 void camera_processMovement() {
-    float fx, fy, fz, rx, rz;
-    camera_getFront(&fx, &fy, &fz);
-    getRight(&rx, &rz);
+    if (isFreeCamera) {
+        // --- MODO LIVRE (Voo) ---
+        float fx, fy, fz, rx, rz;
+        camera_getFront(&fx, &fy, &fz);
+        getRight(&rx, &rz);
 
-    if (keys['w'] || keys['W']) { camX += fx*camSpeed; camY += fy*camSpeed; camZ += fz*camSpeed; }
-    if (keys['s'] || keys['S']) { camX -= fx*camSpeed; camY -= fy*camSpeed; camZ -= fz*camSpeed; }
-    if (keys['a'] || keys['A']) { camX -= rx*camSpeed; camZ -= rz*camSpeed; }
-    if (keys['d'] || keys['D']) { camX += rx*camSpeed; camZ += rz*camSpeed; }
-    if (keys[' '])              { camY += camSpeed; }
-    if (keys['c'] || keys['C']) { camY -= camSpeed; }
+        if (keys['w'] || keys['W']) { camX += fx*camSpeed; camY += fy*camSpeed; camZ += fz*camSpeed; }
+        if (keys['s'] || keys['S']) { camX -= fx*camSpeed; camY -= fy*camSpeed; camZ -= fz*camSpeed; }
+        if (keys['a'] || keys['A']) { camX -= rx*camSpeed; camZ -= rz*camSpeed; }
+        if (keys['d'] || keys['D']) { camX += rx*camSpeed; camZ += rz*camSpeed; }
+        if (keys[' '])              { camY += camSpeed; } // Sobe
+        if (keys['x'] || keys['X']) { camY -= camSpeed; } // Muda para X para não conflitar com o C
+        
+    } else {
+        // --- MODO JOGADOR (FPS) ---
+        float yawR = camYaw * M_PI / 180.0f;
+        
+        // Direções baseadas no ângulo da câmera
+        float dirX = cos(yawR);
+        float dirZ = sin(yawR);
+        float rightX = -dirZ; 
+        float rightZ = dirX;
+
+        // Armazena a intenção de movimento (para onde o jogador QUER ir)
+        float intentX = 0.0f;
+        float intentZ = 0.0f;
+
+        if (keys['w'] || keys['W']) { intentX += dirX * camSpeed; intentZ += dirZ * camSpeed; }
+        if (keys['s'] || keys['S']) { intentX -= dirX * camSpeed; intentZ -= dirZ * camSpeed; }
+        if (keys['a'] || keys['A']) { intentX -= rightX * camSpeed; intentZ -= rightZ * camSpeed; }
+        if (keys['d'] || keys['D']) { intentX += rightX * camSpeed; intentZ += rightZ * camSpeed; }
+
+        // --- SISTEMA DE DESLIZAMENTO (SLIDING) ---
+        // Checamos o eixo X e o eixo Z de forma independente.
+        // Se bater no eixo X, ele não move o X, mas ainda tenta mover o Z.
+        
+        if (!checkWorldCollision(camX + intentX, camZ)) {
+            camX += intentX;
+        }
+        if (!checkWorldCollision(camX, camZ + intentZ)) {
+            camZ += intentZ;
+        }
+    }
 }
 
 void camera_lookAt() {
@@ -63,7 +107,43 @@ void camera_lookAt() {
 }
 
 void camera_keyDown(unsigned char key, int x, int y) {
-    if (key == 27) exit(0);
+    if (key == 27) exit(0); // Esc
+
+// --- LÓGICA DE TELETRANSPORTE (TECLA Z) ---
+    if ((key == 'z' || key == 'Z') && !keys[(int)key]) {
+        if (!isInsideInterior) {
+            // Salva posição e rotação atuais
+            savedX = camX; savedY = camY; savedZ = camZ; savedYaw = camYaw;
+            
+            // Teletransporta para a sala subterrânea
+            camX = 0.0f; 
+            camY = -50.0f + playerHeight; // Mantém a altura dos olhos do jogador
+            camZ = 3.5f;                  // Um pouco à frente da porta (que está em Z = 5.0)
+            
+            // Força o jogador a olhar para dentro da sala (direção -Z)
+            camYaw = -90.0f; 
+            camPitch = 0.0f; // Nivele a visão
+            
+            isInsideInterior = 1;
+        } else {
+            // Volta para a posição e rotação exatas do exterior
+            camX = savedX; camY = savedY; camZ = savedZ; camYaw = savedYaw;
+            isInsideInterior = 0;
+        }
+    }
+    
+    // --- LÓGICA DE ALTERNÂNCIA (TOGGLE) ---
+    // A verificação '!keys[(int)key]' garante que o código rode apenas uma vez quando a tecla é pressionada,
+    // evitando que a câmera fique piscando entre os modos se você segurar a tecla C.
+    if ((key == 'c' || key == 'C') && !keys[(int)key]) {
+        isFreeCamera = !isFreeCamera; // Inverte o estado
+        
+        if (!isFreeCamera) {
+            // Se voltou para o modo jogador, trava a altura de volta para o nível do chão
+            camY = playerHeight; 
+        }
+    }
+
     keys[(int)key] = 1;
 }
 
@@ -71,7 +151,6 @@ void camera_keyUp(unsigned char key, int x, int y) {
     keys[(int)key] = 0;
 }
 
-// Função para capturar clique do mouse
 void camera_mouseButton(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON) {
         mouseButtonHeld = (state == GLUT_DOWN);
@@ -83,9 +162,8 @@ void camera_mouseButton(int button, int state, int x, int y) {
     }
 }
 
-// Mude camera_mouseMotion para só agir quando o botão estiver pressionado
 void camera_mouseMotion(int x, int y) {
-    if (!mouseButtonHeld) return; // ← só rotaciona se botão pressionado
+    if (!mouseButtonHeld) return;
 
     camYaw   += (x - lastMouseX) * sensitivity;
     camPitch += (lastMouseY - y) * sensitivity;
