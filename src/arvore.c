@@ -43,7 +43,7 @@ static GLuint carregaTextura(const char* arquivo) {
 }
 
 void arvore_init() {
-    texTronco = carregaTextura("texture/log-texture-brown.jpg");
+    texTronco = carregaTextura("src/texture/log-texture-brown.jpg");
 
     // estado inicial: brotinho no verao, ainda nao regou
     estagioPlantas   = 0;

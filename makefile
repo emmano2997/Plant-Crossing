@@ -1,8 +1,15 @@
 CC      = gcc
 CFLAGS  = -Wall -Iinclude
-LIBS    = -lGL -lGLU -lglut -lm
 TARGET  = plant-crossing
+
 SRC     = src/main.c src/camera.c src/arvore.c src/casa.c src/casa_interior.c src/mundo.c
+
+ifeq ($(OS),Windows_NT)
+    LIBS   = -lfreeglut -lopengl32 -lglu32 -lm
+    TARGET := $(TARGET).exe
+else
+    LIBS   = -lGL -lGLU -lglut -lm
+endif
 
 all: $(TARGET)
 
@@ -13,4 +20,4 @@ run: all
 	./$(TARGET)
 
 clean:
-	rm -f $(TARGET)
+	rm -f plant-crossing plant-crossing.exe
