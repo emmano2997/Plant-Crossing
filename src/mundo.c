@@ -27,7 +27,15 @@ static float ventoZ     = 0.0f;
 static float randf(float min, float max) {
     return min + ((float)rand() / (float)RAND_MAX) * (max - min);
 }
-
+void desenhaCirculo(float raio, int segmentos) {
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex3f(0.0f, 0.0f, 0.0f); // Centro
+    for (int i = 0; i <= segmentos; i++) {
+        float angulo = i * 2.0f * M_PI / segmentos;
+        glVertex3f(cos(angulo) * raio, 0.0f, sin(angulo) * raio);
+    }
+    glEnd();
+}
 static void resetaParticula(Particula* p, float alturaMax) {
     p->x    = randf(-28.0f, 28.0f);
     p->y    = randf(alturaMax * 0.5f, alturaMax);
@@ -96,7 +104,52 @@ void mundo_update(int estacao) {
         }
     }
 }
+void definirCorCeu(int estacao) {
+    switch (estacao) {
+        case 0: // Verão (azul vibrante)
+            glClearColor(0.2f, 0.6f, 1.0f, 1.0f);
+            break;
 
+        case 1: // Outono ( pôr do sol)
+            glClearColor(0.9f, 0.6f, 0.6f, 1.0f);
+            break;
+
+        case 2: // Inverno (cinza azulado)
+            glClearColor(0.6f, 0.7f, 0.8f, 1.0f);
+            break;
+
+        case 3: // Primavera (azul claro)
+            glClearColor(0.4f, 0.7f, 1.0f, 1.0f);
+            break;
+    }
+}
+static float tempoSol = 0.0f;
+
+void desenhaEsfera(float raio) {
+    glutSolidSphere(raio, 10, 10); 
+}\
+void desenhaSolLua(int estacao) {
+    tempoSol += 0.0002f; // velocidade
+
+    float raioOrbita = 40.0f;
+
+    float x = cos(tempoSol) * raioOrbita;
+    float y = sin(tempoSol) * raioOrbita;
+
+    glPushMatrix();
+        glTranslatef(x, y + 10.0f, -20.0f);
+
+        if (estacao == 2) {
+            // Lua (inverno)
+            glColor3f(0.85f, 0.85f, 0.9f);
+        } else {
+            // Sol
+            glColor3f(1.0f, 0.9f, 0.3f);
+        }
+
+        desenhaEsfera(2.5f); 
+    glPopMatrix();
+}
 // ─── Chao por estacao 
 static void desenhaChao(int estacao) {
     glDisable(GL_TEXTURE_2D);
@@ -176,15 +229,7 @@ static void desenhaCercaUnidade() {
         glutSolidCube(1.0f);
     glPopMatrix();
 }
-void desenhaCirculo(float raio, int segmentos) {
-    glBegin(GL_TRIANGLE_FAN);
-    glVertex3f(0.0f, 0.0f, 0.0f); // Centro
-    for (int i = 0; i <= segmentos; i++) {
-        float angulo = i * 2.0f * M_PI / segmentos;
-        glVertex3f(cos(angulo) * raio, 0.0f, sin(angulo) * raio);
-    }
-    glEnd();
-}
+
 void desenhaLago() {
     glEnable(GL_BLEND); // Ativa transparência
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -329,6 +374,8 @@ void desenhaVegetacao(int estacao) {
 }
 void mundo_desenhar(int estacao) {
     inicializaParticulas();
+    desenhaSolLua(estacao);
+    definirCorCeu(estacao);   
 
     desenhaChao(estacao);
     desenhaLago();

@@ -119,7 +119,6 @@ void renderText2D(float x, float y, const char *string) {
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
 }
-
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
