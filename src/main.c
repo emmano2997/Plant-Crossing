@@ -168,6 +168,8 @@ int main(int argc, char** argv) {
     return 0;
 }
 // ─── Resumo dos controles ─────────────────────────────────────────────
+// C  →  alterna entre camera jogador e camera livre (free look)
+// Z  →  teletransporta para dentro da casa (e volta para fora se ja estiver dentro)
 // R  →  rega a planta (so funciona uma vez por estacao)
 // F  →  dorme / passa para proxima estacao
 //        se regou: planta cresce (estagio++)
