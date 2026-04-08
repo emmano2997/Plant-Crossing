@@ -1,13 +1,9 @@
 #include "../include/arvore.h"
+#include "../include/textura.h"
 #include <math.h>
 #include <stdio.h>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
 #define M_PI 3.14159265358979323846
-
-GLuint texTronco;
 
 int estacaoAtual;
 int regouEssaEstacao;
@@ -19,31 +15,7 @@ int   estagioPlantas = 0;
 
 static float rotAngle = 0.0f; // controla vento 
 
-// textura  
-static GLuint carregaTextura(const char* arquivo) {
-    GLuint texID;
-    glGenTextures(1, &texID);
-    glBindTexture(GL_TEXTURE_2D, texID);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    int largura, altura, canais;
-    unsigned char* dados = stbi_load(arquivo, &largura, &altura, &canais, 0);
-    if (dados) {
-        GLenum formato = (canais == 4) ? GL_RGBA : GL_RGB;
-        glTexImage2D(GL_TEXTURE_2D, 0, formato, largura, altura, 0,
-                     formato, GL_UNSIGNED_BYTE, dados);
-        stbi_image_free(dados);
-    } else {
-        printf("Erro ao carregar textura: %s\n", arquivo);
-    }
-    return texID;
-}
-
 void arvore_init() {
-    texTronco = carregaTextura("texture/log-texture-brown.jpg");
 
     // estado inicial: brotinho no verao, ainda nao regou
     estagioPlantas   = 0;
