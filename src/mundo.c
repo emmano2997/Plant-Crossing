@@ -1,4 +1,5 @@
 #include "../include/mundo.h"
+#include "../include/textura.h"
 #include <GL/glut.h>
 #include <math.h>
 #include <stdlib.h>
@@ -254,28 +255,32 @@ void desenhaSolLua(int estacao) {
 }
 // ─── Chao por estacao 
 static void desenhaChao(int estacao) {
-    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texGrama);
 
     switch (estacao) {
-        case 0: glColor3f(0.45f, 0.78f, 0.32f); break; // verao: verde
-        case 1: glColor3f(0.50f, 0.62f, 0.25f); break; // outono: amarelado
-        case 2: glColor3f(0.88f, 0.92f, 0.95f); break; // inverno: neve
-        case 3: glColor3f(0.50f, 0.82f, 0.40f); break; // primavera: verde claro
+        case 0: glColor3f(0.45f, 0.78f, 0.32f); break;
+        case 1: glColor3f(0.50f, 0.62f, 0.25f); break;
+        case 2: glColor3f(0.88f, 0.92f, 0.95f); break;
+        case 3: glColor3f(0.50f, 0.82f, 0.40f); break;
     }
+    glNormal3f(0.0f, 1.0f, 0.0f);
     glBegin(GL_QUADS);
-        glVertex3f(-35.0f, 0.0f, -35.0f);
-        glVertex3f(-35.0f, 0.0f,  35.0f);
-        glVertex3f( 35.0f, 0.0f,  35.0f);
-        glVertex3f( 35.0f, 0.0f, -35.0f);
+        glTexCoord2f(0.0f,  0.0f);  glVertex3f(-35.0f, 0.0f, -35.0f);
+        glTexCoord2f(0.0f,  15.0f); glVertex3f(-35.0f, 0.0f,  35.0f);
+        glTexCoord2f(15.0f, 15.0f); glVertex3f( 35.0f, 0.0f,  35.0f);
+        glTexCoord2f(15.0f, 0.0f);  glVertex3f( 35.0f, 0.0f, -35.0f);
     glEnd();
 
-    // listras decorativas
+    glDisable(GL_TEXTURE_2D);
+
     switch (estacao) {
         case 0: glColor3f(0.42f, 0.74f, 0.29f); break;
         case 1: glColor3f(0.46f, 0.58f, 0.22f); break;
         case 2: glColor3f(0.82f, 0.88f, 0.92f); break;
         case 3: glColor3f(0.46f, 0.78f, 0.36f); break;
     }
+    glNormal3f(0.0f, 1.0f, 0.0f);
     for (int i = -5; i <= 5; i++) {
         glBegin(GL_QUADS);
             glVertex3f(i * 4.0f - 0.6f, 0.01f, -30.0f);
@@ -287,9 +292,11 @@ static void desenhaChao(int estacao) {
 }
 
 static void desenhaCaminho(int estacao) {
+    glDisable(GL_TEXTURE_2D);
     if (estacao == 2) glColor3f(0.80f, 0.84f, 0.90f);
     else              glColor3f(0.60f, 0.50f, 0.40f);
 
+    glNormal3f(0.0f, 1.0f, 0.0f);
     glPushMatrix();
         glTranslatef(0.0f, 0.0f, -1.0f);
         glBegin(GL_QUADS);
