@@ -573,10 +573,7 @@ void configurarFog(int estacao) {
     glHint(GL_FOG_HINT, GL_NICEST);
 }
 static void desenhaMontanha(int estacao) {
-    glPushMatrix();
-        // Posiciona bem ao fundo, como uma tela de teatro
-        glTranslatef(0.0f, 0.0f, -33.0f); 
-        
+    glPushMatrix();        
         // Cor da montanha: um tom que mude com a estação
         if (estacao == 2) glColor3f(0.7f, 0.75f, 0.85f); // Inverno (azul frio)
         else if (estacao == 1) glColor3f(0.5f, 0.3f, 0.2f); // Outono (marrom terra)
@@ -594,6 +591,122 @@ static void desenhaMontanha(int estacao) {
         glEnd();
         
     glPopMatrix();
+}void desenhaMontanhasBackground(int estacao) {
+
+    // FUNDO 
+    glPushMatrix();
+        glTranslatef(0.0f, 0.0f, -33.0f); 
+        desenhaMontanha(estacao);
+    glPopMatrix();
+
+    // FRENTE
+    glPushMatrix();
+        glTranslatef(0.0f, 0.0f, 33.0f);
+        glRotatef(180, 0, 1, 0); // vira a montanha
+        desenhaMontanha(estacao);
+    glPopMatrix();
+
+    // ESQUERDA
+    glPushMatrix();
+        glTranslatef(-33.0f, 0.0f, 0.0f);
+        glRotatef(90, 0, 1, 0);
+        desenhaMontanha(estacao);
+    glPopMatrix();
+
+    // DIREITA
+    glPushMatrix();
+        glTranslatef(33.0f, 0.0f, 0.0f);
+        glRotatef(-90, 0, 1, 0);
+        desenhaMontanha(estacao);
+    glPopMatrix();
+}
+void desenhaArvore(int estacao) {
+    // Tronco
+    glColor3f(0.4f, 0.25f, 0.1f);
+    glPushMatrix();
+        glTranslatef(0.0f, 0.5f, 0.0f);
+        glScalef(0.2f, 1.0f, 0.2f);
+        glutSolidCube(1.0f);
+    glPopMatrix();
+
+    // Copa (muda com estação)
+    if (estacao == 0) glColor3f(0.1f, 0.6f, 0.2f);      // verão
+    else if (estacao == 1) glColor3f(0.8f, 0.4f, 0.1f); // outono
+    else if (estacao == 2) glColor3f(0.9f, 0.9f, 0.9f); // inverno
+    else glColor3f(0.3f, 0.8f, 0.3f);                   // primavera
+
+    glPushMatrix();
+        glTranslatef(0.0f, 1.3f, 0.0f);
+        glutSolidSphere(0.7f, 10, 10);
+    glPopMatrix();
+}
+void desenhaFloresta(int estacao) {
+    float passo = 6.0f; // espacamento
+
+    //fila interna (logo atrás da cerca)
+    // Frente (Z negativo)
+    for (float i = -28.0f; i < 28.0f; i += passo) {
+        glPushMatrix();
+            glTranslatef(i, 0.0f, -27.0f);
+            desenhaArvore(estacao);
+        glPopMatrix();
+    }
+
+    // Fundo (Z positivo)
+    for (float i = -28.0f; i < 28.0f; i += passo) {
+        glPushMatrix();
+            glTranslatef(i, 0.0f, 27.0f);
+            desenhaArvore(estacao);
+        glPopMatrix();
+    }
+
+    // Esquerda (X negativo)
+    for (float i = -28.0f; i < 28.0f; i += passo) {
+        glPushMatrix();
+            glTranslatef(-27.0f, 0.0f, i);
+            desenhaArvore(estacao);
+        glPopMatrix();
+    }
+
+    // Direita (X positivo)
+    for (float i = -28.0f; i < 28.0f; i += passo) {
+        glPushMatrix();
+            glTranslatef(27.0f, 0.0f, i);
+            desenhaArvore(estacao);
+        glPopMatrix();
+    }
+
+    // Frente externa
+    for (float i = -28.0f; i < 28.0f; i += passo) {
+        glPushMatrix();
+            glTranslatef(i + 1.5f, 0.0f, -32.0f);
+            desenhaArvore(estacao);
+        glPopMatrix();
+    }
+
+    // Fundo externo
+    for (float i = -28.0f; i < 28.0f; i += passo) {
+        glPushMatrix();
+            glTranslatef(i + 1.5f, 0.0f, 32.0f);
+            desenhaArvore(estacao);
+        glPopMatrix();
+    }
+
+    // Esquerda externa
+    for (float i = -28.0f; i < 28.0f; i += passo) {
+        glPushMatrix();
+            glTranslatef(-32.0f, 0.0f, i + 1.5f);
+            desenhaArvore(estacao);
+        glPopMatrix();
+    }
+
+    // Direita externa
+    for (float i = -28.0f; i < 28.0f; i += passo) {
+        glPushMatrix();
+            glTranslatef(32.0f, 0.0f, i + 1.5f);
+            desenhaArvore(estacao);
+        glPopMatrix();
+    }
 }
 void mundo_desenhar(int estacao) {
     //inicializaParticulas();
@@ -603,12 +716,14 @@ void mundo_desenhar(int estacao) {
     configurarFog(estacao);
     desenhaChao(estacao);
     desenhaLago();
-    desenhaMontanha(estacao);
+    desenhaMontanhasBackground(estacao);
     desenhaCaminho(estacao);
 
     desenhaPedras(); 
     desenhaVegetacao(estacao); 
     desenhaFolhasNoChao(estacao);
+
+    desenhaFloresta(estacao);
 
     // cercas
     for (float i = -30.0f; i < 30.0f; i += 1.0f) {
