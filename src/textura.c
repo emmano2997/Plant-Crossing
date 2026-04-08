@@ -197,7 +197,7 @@ static GLuint geraTexturaMadeira() {
 }
 
 void texturas_init() {
-    texTronco  = carregaTextura("texture/log-texture-brown.jpg");
+    texTronco  = carregaTextura("src/texture/log-texture-brown.jpg");
     texGrama   = geraTexturaGrama();
     texParede  = geraTexturaParede();
     texTelhado = geraTexturaTelhado();
