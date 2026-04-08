@@ -134,10 +134,52 @@ static void desenhaJanelaInteriorDir(float paredeX) {
     QUAD(jx-0.01f, 1.8f, -1.0f, jx-0.01f, 1.8f, 1.0f, jx-0.01f, 1.9f, 1.0f, jx-0.01f, 1.9f, -1.0f)
     QUAD(jx-0.01f, 1.2f, -0.05f, jx-0.01f, 1.2f, 0.05f, jx-0.01f, 2.5f, 0.05f, jx-0.01f, 2.5f, -0.05f)
 }
+static void desenhaLampada() {
+    float lx = 0.0f, ly = 3.8f, lz = 0.0f; // Centralizada no teto (altura 4.0)
+
+    // bocal da lâmpada
+    desenhaCaixaCor(lx, ly + 0.05f, lz, 0.4f, 0.1f, 0.4f, 0.1f, 0.1f, 0.1f);
+
+    // lâmpada
+    glPushMatrix();
+        glTranslatef(lx, ly - 0.1f, lz);
+        
+        // Faz o material da lâmpada "emitir" luz visualmente
+        float emissao[] = {1.0f, 1.0f, 0.8f, 1.0f}; // Amarelado
+        glMaterialfv(GL_FRONT, GL_EMISSION, emissao);
+        
+        glColor3f(1.0f, 1.0f, 0.9f);
+        glutSolidSphere(0.15f, 8, 8); // Low poly
+        
+        // Reset da emissão para não afetar outros objetos
+        float semEmissao[] = {0.0f, 0.0f, 0.0f, 1.0f};
+        glMaterialfv(GL_FRONT, GL_EMISSION, semEmissao);
+    glPopMatrix();
+}
+void configurarLuzInterna() {
+    glEnable(GL_LIGHTING);   
+    glEnable(GL_LIGHT0);    
+
+    // O 4º parâmetro '1.0f' torna a luz uma point light
+    float posicao[] = { 0.0f, 3.8f, 0.0f, 1.0f };
+    
+    // Cores da luz 
+    float luzDifusa[] = { 1.0f, 0.9f, 0.7f, 1.0f }; 
+    float luzAmbiente[] = { 0.2f, 0.2f, 0.2f, 1.0f }; 
+
+    glLightfv(GL_LIGHT0, GL_POSITION, posicao);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, luzDifusa);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, luzAmbiente);
+
+    glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 1.0f);
+    glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.05f);
+}
 
 void desenharInteriorExpandido(float x, float y, float z) {
     glPushMatrix();
     glTranslatef(x, y, z);
+
+    configurarLuzInterna();
 
     float tamanho = 5.0f; 
     float alturaS = 4.0f;
@@ -160,6 +202,7 @@ void desenharInteriorExpandido(float x, float y, float z) {
     desenhaJanelaInteriorDir(tamanho); 
 
     // --- RENDERIZAÇÃO DOS MÓVEIS ---
+    desenhaLampada();
     desenhaCama();
     desenhaMesaCabeceira();
     desenhaArmario();
