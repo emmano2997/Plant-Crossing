@@ -135,6 +135,11 @@ static void desenhaJanelaInteriorDir(float paredeX) {
     QUAD(jx-0.01f, 1.2f, -0.05f, jx-0.01f, 1.2f, 0.05f, jx-0.01f, 2.5f, 0.05f, jx-0.01f, 2.5f, -0.05f)
 }
 static void desenhaLampada() {
+    /*  DIFICULDADE: Vertex Lightin No OpenGL, a iluminação é calculada 
+     apenas nos vértices. Como o teto é um polígono único e gigante, o brilho 
+     concentra-se nas quinas (vértices) e ignora o centro (onde está a lâmpada), 
+     pois não há um vértice físico ali para processar o cálculo da Point Light.
+    */
     float lx = 0.0f, ly = 3.8f, lz = 0.0f; // Centralizada no teto (altura 4.0)
 
     // bocal da lâmpada
@@ -144,12 +149,11 @@ static void desenhaLampada() {
     glPushMatrix();
         glTranslatef(lx, ly - 0.1f, lz);
         
-        // Faz o material da lâmpada "emitir" luz visualmente
         float emissao[] = {1.0f, 1.0f, 0.8f, 1.0f}; // Amarelado
         glMaterialfv(GL_FRONT, GL_EMISSION, emissao);
         
         glColor3f(1.0f, 1.0f, 0.9f);
-        glutSolidSphere(0.15f, 8, 8); // Low poly
+        glutSolidSphere(0.15f, 8, 8); 
         
         // Reset da emissão para não afetar outros objetos
         float semEmissao[] = {0.0f, 0.0f, 0.0f, 1.0f};

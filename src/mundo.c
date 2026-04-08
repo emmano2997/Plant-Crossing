@@ -581,13 +581,13 @@ static void desenhaMontanha(int estacao) {
 
         glBegin(GL_POLYGON);
             // Desenha a silhueta (x, y, z)
-            glVertex3f(-30.0f,  0.0f, 0.1f);  // Base esquerda
+            glVertex3f(-30.0f,  0.0f, 0.0f);  // Base esquerda
             glVertex3f(-20.0f, 15.0f, 0.2f);  // Pico 1
-            glVertex3f(-10.0f,  8.0f, 0.3f);  // Vale
-            glVertex3f(  0.0f, 20.0f, 0.4f);  // Pico central (mais alto)
+            glVertex3f(-10.0f,  8.0f, 0.35f);  // Vale
+            glVertex3f(  0.0f, 20.0f, 0.45f);  // Pico central (mais alto)
             glVertex3f( 20.0f, 10.0f, 0.5f);  // Vale
-            glVertex3f( 25.0f, 18.0f, 0.6f);  // Pico 2
-            glVertex3f( 35.0f,  0.0f, 0.7f);  // Base direita
+            glVertex3f( 25.0f, 18.0f, 0.65);  // Pico 2
+            glVertex3f( 35.0f,  0.0f, 0.75f);  // Base direita
         glEnd();
         
     glPopMatrix();
