@@ -427,16 +427,32 @@ static void desenhaFolhasVoando() {
     glDisable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     for (int i = 0; i < N_PART; i++) {
         Particula* p = &partsFolha[i];
+        
         glPushMatrix();
-            glTranslatef(p->x, p->y, p->z);
-            glRotatef(ventoX * 1800.0f, 0.0f, 0.0f, 1.0f);
+            // 1. Posição baseada na estrutura de partículas (dinâmica)
+            // Adicionamos um leve balanço senoidal extra no Y para suavizar a queda
+            float offsetY = 0.2f * sinf(ventoCiclo + p->fase); 
+            glTranslatef(p->x, p->y + offsetY, p->z);
+
+            // 2. Rotação Combinada: 
+            // i*47 dá uma orientação inicial única para cada folha
+            // ventoX*1800.0f faz todas reagirem ao vento global
+            glRotatef((float)(i * 47) + (ventoX * 1800.0f), 0.1f, 1.0f, 0.2f);
+
+            // 3. Escala low-poly
             glScalef(0.12f, 0.01f, 0.18f);
+
+            // 4. Cor e Transparência Dinâmica:
+            // A vida (p->vida) controla o brilho e o desaparecimento gradual
             glColor4f(0.80f, 0.35f + p->vida * 0.1f, 0.0f, p->vida * 0.85f);
+            
             glutSolidSphere(1.0f, 5, 5);
         glPopMatrix();
     }
+    
     glDisable(GL_BLEND);
 }
 
@@ -633,12 +649,65 @@ void desenhaFloresta(int estacao) {
         glPopMatrix();
     }
 }
+static void desenhaNeve() {
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glPointSize(3.5f);
+    glColor4f(0.95f, 0.97f, 1.0f, 0.9f);
+    glBegin(GL_POINTS);
+    for (int i = 0; i < 100; i++) {
+        float x = (float)(i % 20) - 10.0f;
+        float z = (float)(i / 5)  - 10.0f;
+        float y = 5.0f + sinf((float)i);
+        glVertex3f(x * 2.0f, y, z * 2.0f);
+    }
+    glEnd();
+    glDisable(GL_BLEND);
+    glPointSize(1.0f);
+}
+static void desenhaFolhasVoandoEstaticas() {
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    for (int i = 0; i < 80; i++) {
+        float x = (float)(i % 16) * 3.5f - 28.0f;
+        float z = (float)(i / 16) * 7.0f - 28.0f;
+        float y = 2.0f + sinf((float)i * 1.3f) * 2.0f;
+        glPushMatrix();
+            glTranslatef(x, y, z);
+            glRotatef((float)(i * 47) , 0.0f, 1.0f, 0.0f); // rotacao fixa por i
+            glScalef(0.12f, 0.01f, 0.18f);
+            glColor4f(0.80f, 0.35f, 0.0f, 0.85f);
+            glutSolidSphere(1.0f, 5, 5);
+        glPopMatrix();
+    }
+    glDisable(GL_BLEND);
+}
+static void desenhaPetalasEstatica() {
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    for (int i = 0; i < 80; i++) {
+        float x = (float)(i % 16) * 3.5f - 28.0f;
+        float z = (float)(i / 16) * 7.0f - 28.0f;
+        float y = 1.5f + sinf((float)i * 1.7f) * 2.5f;
+        glPushMatrix();
+            glTranslatef(x, y, z);
+            glRotatef((float)(i * 63), 0.0f, 1.0f, 0.0f);
+            glScalef(0.10f, 0.01f, 0.14f);
+            glColor4f(1.0f, 0.70f, 0.80f, 0.80f);
+            glutSolidSphere(1.0f, 5, 5);
+        glPopMatrix();
+    }
+    glDisable(GL_BLEND);
+}
+
 void mundo_desenhar(int estacao) {
     //inicializaParticulas();
 
     desenhaSolLua(estacao);
     definirCorCeu(estacao);   
-    configurarFog(estacao);
     desenhaChao(estacao);
     
     desenhaMontanhasBackground(estacao);
@@ -674,9 +743,9 @@ void mundo_desenhar(int estacao) {
 
     // particulas por estacao
     switch (estacao) {
-        case 1: desenhaFolhasVoando(); break;
+        case 1: desenhaFolhasVoando();desenhaFolhasVoandoEstaticas(); break;
         case 2: desenhaNeve();         break;
-        case 3: desenhaPetalas();      break;
+        case 3: desenhaPetalas();desenhaPetalasEstatica();      break;
     }
 }
 int verificaColisao(float proxX, float proxZ) {
