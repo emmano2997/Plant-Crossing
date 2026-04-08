@@ -146,19 +146,19 @@ void desenhaEsfera(float raio) {
 //   material sem precisar chamar glMaterialfv a cada objeto. Pratico
 //   para projetos onde cada objeto ja tem sua propria cor definida.
 void mundo_iluminacao_init() {
-    // Ativa o pipeline de iluminacao do OpenGL
     glEnable(GL_LIGHTING);
-
-    // Ativa a luz 0 (sera reposicionada a cada frame pelo sol/lua)
     glEnable(GL_LIGHT0);
 
-    // GL_COLOR_MATERIAL: glColor3f passa a controlar o material difuso+ambiente
-    // sem isso, glColor3f seria ignorado quando a iluminacao esta ativa
+    glShadeModel(GL_SMOOTH);
+
     glEnable(GL_COLOR_MATERIAL);
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
-    // Normalizacao automatica das normais apos glScalef
-    // (sem isso, o glScalef distorce os calculos de iluminacao)
+    GLfloat mat_specular[] = {0.3f, 0.3f, 0.3f, 1.0f};
+    GLfloat mat_shininess[] = {25.0f};
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
+
     glEnable(GL_NORMALIZE);
 }
 
@@ -224,6 +224,9 @@ void desenhaSolLua(int estacao) {
     // GL_AMBIENT: luz ambiente global — evita que areas sem luz direta
     // fiquem completamente pretas (simula luz indireta/reflexao difusa)
     glLightfv(GL_LIGHT0, GL_AMBIENT,  ambiente);
+
+    GLfloat especular[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    glLightfv(GL_LIGHT0, GL_SPECULAR, especular);
 
     // ── Quando o sol esta abaixo do horizonte (y<0): escurece tudo ──
     // Simulamos a noite/entardecer reduzindo a intensidade da luz ambiente
