@@ -423,51 +423,36 @@ static void desenhaCercaUnidade() {
     glPopMatrix();
 }
 
-void desenhaLago() {
-    glEnable(GL_BLEND); // Ativa transparência
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
-    glColor4f(0.1f, 0.4f, 0.8f, 0.7f); // Azul (agua)
-
-    glPushMatrix();
-        glTranslatef(-22.0f, 0.2f, -22.0f); // Posicao
-        glScalef(1.5f, 1.0f, 1.0f); 
-        desenhaCirculo(2.0f, 30);
-    glPopMatrix();
-    
-    glDisable(GL_BLEND); // Desativa transparência para não afetar outros objetos
-}
-
-static void desenhaNeve() {
-    glDisable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glPointSize(3.5f);
-    glBegin(GL_POINTS);
-    for (int i = 0; i < N_PART; i++) {
-        Particula* p = &partsNeve[i];
-        glColor4f(0.95f, 0.97f, 1.0f, p->vida * 0.9f);
-        glVertex3f(p->x, p->y, p->z);
-    }
-    glEnd();
-    glDisable(GL_BLEND);
-    glPointSize(1.0f);
-}
-
 static void desenhaFolhasVoando() {
     glDisable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     for (int i = 0; i < N_PART; i++) {
         Particula* p = &partsFolha[i];
+        
         glPushMatrix();
-            glTranslatef(p->x, p->y, p->z);
-            glRotatef(ventoX * 1800.0f, 0.0f, 0.0f, 1.0f);
+            // 1. Posição baseada na estrutura de partículas (dinâmica)
+            // Adicionamos um leve balanço senoidal extra no Y para suavizar a queda
+            float offsetY = 0.2f * sinf(ventoCiclo + p->fase); 
+            glTranslatef(p->x, p->y + offsetY, p->z);
+
+            // 2. Rotação Combinada: 
+            // i*47 dá uma orientação inicial única para cada folha
+            // ventoX*1800.0f faz todas reagirem ao vento global
+            glRotatef((float)(i * 47) + (ventoX * 1800.0f), 0.1f, 1.0f, 0.2f);
+
+            // 3. Escala low-poly
             glScalef(0.12f, 0.01f, 0.18f);
+
+            // 4. Cor e Transparência Dinâmica:
+            // A vida (p->vida) controla o brilho e o desaparecimento gradual
             glColor4f(0.80f, 0.35f + p->vida * 0.1f, 0.0f, p->vida * 0.85f);
+            
             glutSolidSphere(1.0f, 5, 5);
         glPopMatrix();
     }
+    
     glDisable(GL_BLEND);
 }
 
@@ -498,8 +483,6 @@ void desenhaPedras() {
         // EVITAR ÁREAS ESPECÍFICAS:
         // Se a pedra cair dentro do caminho, pulamos para a próxima iteração
         if (z > -0.5f && z < 2.5f && x > -16.0f && x < 16.0f) continue;
-        // Se cair dentro do lago
-        if (x < -16.0f && z < -16.0f) continue;
 
         glPushMatrix();
             glTranslatef(x, 0.05f, z);
@@ -526,8 +509,6 @@ void desenhaVegetacao(int estacao) {
         
         // Evita desenhar em cima do caminho (aproximadamente)
         if (z > -1.0f && z < 3.0f && x > -16.0f && x < 16.0f) continue;
-        // Evita desenhar dentro do lago
-        if (x < -16.0f && z < -16.0f) continue;
 
         // Desenha Grama 
         if (estacao == 2) // Inverno: Grama coberta de neve
@@ -564,23 +545,6 @@ void desenhaVegetacao(int estacao) {
             glPopMatrix();
         }
     }
-}
-void configurarFog(int estacao) {
-    glEnable(GL_FOG);
-    
-    GLfloat fogColor[4];
-    switch (estacao) {
-        case 0: fogColor[0]=0.2f; fogColor[1]=0.6f; fogColor[2]=1.0f; break; // Verão
-        case 1: fogColor[0]=0.9f; fogColor[1]=0.6f; fogColor[2]=0.6f; break; // Outono
-        case 2: fogColor[0]=0.6f; fogColor[1]=0.7f; fogColor[2]=0.8f; break; // Inverno
-        case 3: fogColor[0]=0.4f; fogColor[1]=0.7f; fogColor[2]=1.0f; break; // Primavera
-    }
-    fogColor[3] = 1.0f;
-
-    glFogfv(GL_FOG_COLOR, fogColor);
-    glFogi(GL_FOG_MODE, GL_EXP2);      // neblina 
-    glFogf(GL_FOG_DENSITY, 0.002f);    // densidade
-    glHint(GL_FOG_HINT, GL_NICEST);
 }
 static void desenhaMontanha(int estacao) {
     glPushMatrix();        
@@ -685,14 +649,67 @@ void desenhaFloresta(int estacao) {
         glPopMatrix();
     }
 }
+static void desenhaNeve() {
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glPointSize(3.5f);
+    glColor4f(0.95f, 0.97f, 1.0f, 0.9f);
+    glBegin(GL_POINTS);
+    for (int i = 0; i < 100; i++) {
+        float x = (float)(i % 20) - 10.0f;
+        float z = (float)(i / 5)  - 10.0f;
+        float y = 5.0f + sinf((float)i);
+        glVertex3f(x * 2.0f, y, z * 2.0f);
+    }
+    glEnd();
+    glDisable(GL_BLEND);
+    glPointSize(1.0f);
+}
+static void desenhaFolhasVoandoEstaticas() {
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    for (int i = 0; i < 80; i++) {
+        float x = (float)(i % 16) * 3.5f - 28.0f;
+        float z = (float)(i / 16) * 7.0f - 28.0f;
+        float y = 2.0f + sinf((float)i * 1.3f) * 2.0f;
+        glPushMatrix();
+            glTranslatef(x, y, z);
+            glRotatef((float)(i * 47) , 0.0f, 1.0f, 0.0f); // rotacao fixa por i
+            glScalef(0.12f, 0.01f, 0.18f);
+            glColor4f(0.80f, 0.35f, 0.0f, 0.85f);
+            glutSolidSphere(1.0f, 5, 5);
+        glPopMatrix();
+    }
+    glDisable(GL_BLEND);
+}
+static void desenhaPetalasEstatica() {
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    for (int i = 0; i < 80; i++) {
+        float x = (float)(i % 16) * 3.5f - 28.0f;
+        float z = (float)(i / 16) * 7.0f - 28.0f;
+        float y = 1.5f + sinf((float)i * 1.7f) * 2.5f;
+        glPushMatrix();
+            glTranslatef(x, y, z);
+            glRotatef((float)(i * 63), 0.0f, 1.0f, 0.0f);
+            glScalef(0.10f, 0.01f, 0.14f);
+            glColor4f(1.0f, 0.70f, 0.80f, 0.80f);
+            glutSolidSphere(1.0f, 5, 5);
+        glPopMatrix();
+    }
+    glDisable(GL_BLEND);
+}
+
 void mundo_desenhar(int estacao) {
     //inicializaParticulas();
 
     desenhaSolLua(estacao);
     definirCorCeu(estacao);   
-    configurarFog(estacao);
     desenhaChao(estacao);
-    desenhaLago();
+    
     desenhaMontanhasBackground(estacao);
     desenhaCaminho(estacao);
 
@@ -726,9 +743,9 @@ void mundo_desenhar(int estacao) {
 
     // particulas por estacao
     switch (estacao) {
-        case 1: desenhaFolhasVoando(); break;
+        case 1: desenhaFolhasVoando();desenhaFolhasVoandoEstaticas(); break;
         case 2: desenhaNeve();         break;
-        case 3: desenhaPetalas();      break;
+        case 3: desenhaPetalas();desenhaPetalasEstatica();      break;
     }
 }
 int verificaColisao(float proxX, float proxZ) {
