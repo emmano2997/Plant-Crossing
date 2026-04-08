@@ -36,10 +36,14 @@ Ambiente 3D nas diferentes estações:
   </tr>
 </table>
 
-<p align="center">
-  <img src="https://github.com/emmano2997/Plant-Crossing/blob/main/img/troca_estacao.gif" width="500">
-  <sub><b>Figure 5:</b> Alteração de Estação</sub>
-</p>
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="https://github.com/emmano2997/Plant-Crossing/blob/main/img/troca_estacao.gif" width="400"/><br/>
+      <sub><b>Figure 5:</b> Alteração de Estação</sub>
+    </td>
+  </tr>
+</table>
 
 ## 🛠️ Atividades Práticas Implementadas
 O projeto aplica os conceitos fundamentais da disciplina:
