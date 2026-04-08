@@ -1,4 +1,5 @@
 #include "../include/casa_interior.h"
+#include "../include/textura.h"
 #include <GL/glut.h>
 
 // Macro auxiliar para reduzir repetição
@@ -14,16 +15,23 @@ static void desenhaCaixaCor(float cx, float cy, float cz, float sx, float sy, fl
     glTranslatef(cx, cy, cz);
     glScalef(sx, sy, sz);
     glBegin(GL_QUADS);
-    // Cima (Mais claro)
+    // Cima
+    glNormal3f(0.0f, 1.0f, 0.0f);
     glColor3f(r*1.1f, g*1.1f, b*1.1f);
     glVertex3f(-0.5f, 0.5f, 0.5f); glVertex3f( 0.5f, 0.5f, 0.5f); glVertex3f( 0.5f, 0.5f,-0.5f); glVertex3f(-0.5f, 0.5f,-0.5f);
-    // Frente e Trás (Cor base)
+    // Frente
+    glNormal3f(0.0f, 0.0f, 1.0f);
     glColor3f(r, g, b);
     glVertex3f(-0.5f,-0.5f, 0.5f); glVertex3f( 0.5f,-0.5f, 0.5f); glVertex3f( 0.5f, 0.5f, 0.5f); glVertex3f(-0.5f, 0.5f, 0.5f);
+    // Trás
+    glNormal3f(0.0f, 0.0f, -1.0f);
     glVertex3f(-0.5f,-0.5f,-0.5f); glVertex3f(-0.5f, 0.5f,-0.5f); glVertex3f( 0.5f, 0.5f,-0.5f); glVertex3f( 0.5f,-0.5f,-0.5f);
-    // Laterais (Mais escuro)
+    // Direita
+    glNormal3f(1.0f, 0.0f, 0.0f);
     glColor3f(r*0.8f, g*0.8f, b*0.8f);
     glVertex3f( 0.5f,-0.5f, 0.5f); glVertex3f( 0.5f,-0.5f,-0.5f); glVertex3f( 0.5f, 0.5f,-0.5f); glVertex3f( 0.5f, 0.5f, 0.5f);
+    // Esquerda
+    glNormal3f(-1.0f, 0.0f, 0.0f);
     glVertex3f(-0.5f,-0.5f, 0.5f); glVertex3f(-0.5f, 0.5f, 0.5f); glVertex3f(-0.5f, 0.5f,-0.5f); glVertex3f(-0.5f,-0.5f,-0.5f);
     glEnd();
     glPopMatrix();
@@ -188,16 +196,34 @@ void desenharInteriorExpandido(float x, float y, float z) {
     float tamanho = 5.0f; 
     float alturaS = 4.0f;
 
-    glColor3f(0.3f, 0.2f, 0.1f); 
-    QUAD(-tamanho, 0, -tamanho,  tamanho, 0, -tamanho,  tamanho, 0, tamanho, -tamanho, 0, tamanho)
-    glColor3f(0.8f, 0.8f, 0.8f); 
+    // Chao com textura de madeira
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texMadeira);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glNormal3f(0.0f, 1.0f, 0.0f);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-tamanho, 0, -tamanho);
+    glTexCoord2f(5.0f, 0.0f); glVertex3f( tamanho, 0, -tamanho);
+    glTexCoord2f(5.0f, 5.0f); glVertex3f( tamanho, 0,  tamanho);
+    glTexCoord2f(0.0f, 5.0f); glVertex3f(-tamanho, 0,  tamanho);
+    glEnd();
+    glDisable(GL_TEXTURE_2D);
+
+    // Teto
+    glColor3f(0.8f, 0.8f, 0.8f);
+    glNormal3f(0.0f, -1.0f, 0.0f);
     QUAD(-tamanho, alturaS, -tamanho,  tamanho, alturaS, -tamanho,  tamanho, alturaS, tamanho, -tamanho, alturaS, tamanho)
 
+    // Paredes com normais
     glColor3f(0.6f, 0.6f, 0.7f);
-    QUAD(-tamanho, 0, -tamanho,  tamanho, 0, -tamanho,  tamanho, alturaS, -tamanho, -tamanho, alturaS, -tamanho) 
-    QUAD(tamanho, 0, -tamanho,  tamanho, 0, tamanho,  tamanho, alturaS, tamanho,  tamanho, alturaS, -tamanho) 
-    QUAD(-tamanho, 0, tamanho, -tamanho, 0, -tamanho, -tamanho, alturaS, -tamanho, -tamanho, alturaS, tamanho) 
-    
+    glNormal3f(0.0f, 0.0f, 1.0f);
+    QUAD(-tamanho, 0, -tamanho,  tamanho, 0, -tamanho,  tamanho, alturaS, -tamanho, -tamanho, alturaS, -tamanho)
+    glNormal3f(-1.0f, 0.0f, 0.0f);
+    QUAD(tamanho, 0, -tamanho,  tamanho, 0, tamanho,  tamanho, alturaS, tamanho,  tamanho, alturaS, -tamanho)
+    glNormal3f(1.0f, 0.0f, 0.0f);
+    QUAD(-tamanho, 0, tamanho, -tamanho, 0, -tamanho, -tamanho, alturaS, -tamanho, -tamanho, alturaS, tamanho)
+
+    glNormal3f(0.0f, 0.0f, -1.0f);
     QUAD(-tamanho, 0, tamanho, -1.0f, 0, tamanho, -1.0f, alturaS, tamanho, -tamanho, alturaS, tamanho)
     QUAD( 1.0f, 0, tamanho,  tamanho, 0, tamanho,  tamanho, alturaS, tamanho,  1.0f, alturaS, tamanho)
     QUAD(-1.0f, 2.5f, tamanho, 1.0f, 2.5f, tamanho, 1.0f, alturaS, tamanho, -1.0f, alturaS, tamanho)
