@@ -423,37 +423,6 @@ static void desenhaCercaUnidade() {
     glPopMatrix();
 }
 
-void desenhaLago() {
-    glEnable(GL_BLEND); // Ativa transparência
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
-    glColor4f(0.1f, 0.4f, 0.8f, 0.7f); // Azul (agua)
-
-    glPushMatrix();
-        glTranslatef(-22.0f, 0.2f, -22.0f); // Posicao
-        glScalef(1.5f, 1.0f, 1.0f); 
-        desenhaCirculo(2.0f, 30);
-    glPopMatrix();
-    
-    glDisable(GL_BLEND); // Desativa transparência para não afetar outros objetos
-}
-
-static void desenhaNeve() {
-    glDisable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glPointSize(3.5f);
-    glBegin(GL_POINTS);
-    for (int i = 0; i < N_PART; i++) {
-        Particula* p = &partsNeve[i];
-        glColor4f(0.95f, 0.97f, 1.0f, p->vida * 0.9f);
-        glVertex3f(p->x, p->y, p->z);
-    }
-    glEnd();
-    glDisable(GL_BLEND);
-    glPointSize(1.0f);
-}
-
 static void desenhaFolhasVoando() {
     glDisable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
@@ -498,8 +467,6 @@ void desenhaPedras() {
         // EVITAR ÁREAS ESPECÍFICAS:
         // Se a pedra cair dentro do caminho, pulamos para a próxima iteração
         if (z > -0.5f && z < 2.5f && x > -16.0f && x < 16.0f) continue;
-        // Se cair dentro do lago
-        if (x < -16.0f && z < -16.0f) continue;
 
         glPushMatrix();
             glTranslatef(x, 0.05f, z);
@@ -526,8 +493,6 @@ void desenhaVegetacao(int estacao) {
         
         // Evita desenhar em cima do caminho (aproximadamente)
         if (z > -1.0f && z < 3.0f && x > -16.0f && x < 16.0f) continue;
-        // Evita desenhar dentro do lago
-        if (x < -16.0f && z < -16.0f) continue;
 
         // Desenha Grama 
         if (estacao == 2) // Inverno: Grama coberta de neve
@@ -564,23 +529,6 @@ void desenhaVegetacao(int estacao) {
             glPopMatrix();
         }
     }
-}
-void configurarFog(int estacao) {
-    glEnable(GL_FOG);
-    
-    GLfloat fogColor[4];
-    switch (estacao) {
-        case 0: fogColor[0]=0.2f; fogColor[1]=0.6f; fogColor[2]=1.0f; break; // Verão
-        case 1: fogColor[0]=0.9f; fogColor[1]=0.6f; fogColor[2]=0.6f; break; // Outono
-        case 2: fogColor[0]=0.6f; fogColor[1]=0.7f; fogColor[2]=0.8f; break; // Inverno
-        case 3: fogColor[0]=0.4f; fogColor[1]=0.7f; fogColor[2]=1.0f; break; // Primavera
-    }
-    fogColor[3] = 1.0f;
-
-    glFogfv(GL_FOG_COLOR, fogColor);
-    glFogi(GL_FOG_MODE, GL_EXP2);      // neblina 
-    glFogf(GL_FOG_DENSITY, 0.002f);    // densidade
-    glHint(GL_FOG_HINT, GL_NICEST);
 }
 static void desenhaMontanha(int estacao) {
     glPushMatrix();        
@@ -692,7 +640,7 @@ void mundo_desenhar(int estacao) {
     definirCorCeu(estacao);   
     configurarFog(estacao);
     desenhaChao(estacao);
-    desenhaLago();
+    
     desenhaMontanhasBackground(estacao);
     desenhaCaminho(estacao);
 
