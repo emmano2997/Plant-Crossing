@@ -7,6 +7,7 @@
 #include "../include/casa.h"
 #include "../include/casa_interior.h"  
 #include "../include/mundo.h"
+#include "../include/textura.h"
 
 #ifndef M_PI
 #define M_PI        3.14159265358979323846
@@ -328,6 +329,7 @@ void init() {
     gluPerspective(45.0, 800.0/600.0, 0.1, 100.0);
     glMatrixMode(GL_MODELVIEW);
 
+    texturas_init();
     arvore_init();
     camera_init();
     mundo_iluminacao_init();

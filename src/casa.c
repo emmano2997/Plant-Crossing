@@ -1,4 +1,5 @@
 #include "../include/casa.h"
+#include "../include/textura.h"
 #include <GL/glut.h>
 #include <math.h>
 
@@ -31,14 +32,23 @@ static void desenhaCaixa(float cx, float cy, float cz, float sx, float sy, float
     glTranslatef(cx, cy, cz);
     glScalef(sx, sy, sz);
     glBegin(GL_QUADS);
-    // Frente e Trás
+    // Frente
+    glNormal3f(0.0f, 0.0f, 1.0f);
     glVertex3f(-0.5f,-0.5f, 0.5f); glVertex3f( 0.5f,-0.5f, 0.5f); glVertex3f( 0.5f, 0.5f, 0.5f); glVertex3f(-0.5f, 0.5f, 0.5f);
+    // Trás
+    glNormal3f(0.0f, 0.0f, -1.0f);
     glVertex3f(-0.5f,-0.5f,-0.5f); glVertex3f(-0.5f, 0.5f,-0.5f); glVertex3f( 0.5f, 0.5f,-0.5f); glVertex3f( 0.5f,-0.5f,-0.5f);
-    // Cima e Baixo
+    // Cima
+    glNormal3f(0.0f, 1.0f, 0.0f);
     glVertex3f(-0.5f, 0.5f, 0.5f); glVertex3f( 0.5f, 0.5f, 0.5f); glVertex3f( 0.5f, 0.5f,-0.5f); glVertex3f(-0.5f, 0.5f,-0.5f);
+    // Baixo
+    glNormal3f(0.0f, -1.0f, 0.0f);
     glVertex3f(-0.5f,-0.5f, 0.5f); glVertex3f(-0.5f,-0.5f,-0.5f); glVertex3f( 0.5f,-0.5f,-0.5f); glVertex3f( 0.5f,-0.5f, 0.5f);
-    // Direita e Esquerda
+    // Direita
+    glNormal3f(1.0f, 0.0f, 0.0f);
     glVertex3f( 0.5f,-0.5f, 0.5f); glVertex3f( 0.5f,-0.5f,-0.5f); glVertex3f( 0.5f, 0.5f,-0.5f); glVertex3f( 0.5f, 0.5f, 0.5f);
+    // Esquerda
+    glNormal3f(-1.0f, 0.0f, 0.0f);
     glVertex3f(-0.5f,-0.5f, 0.5f); glVertex3f(-0.5f, 0.5f, 0.5f); glVertex3f(-0.5f, 0.5f,-0.5f); glVertex3f(-0.5f,-0.5f,-0.5f);
     glEnd();
     glPopMatrix();
@@ -59,29 +69,86 @@ static void desenhaInterior() {
 
 // ── Paredes (Com espessura) ───────────────────────────────────
 static void desenhaParedes() {
-    // --- PAREDES EXTERNAS ---
-    glColor3f(0.95f, 0.93f, 0.88f); 
-    QUAD(-W,   0, D,   -0.5f, 0, D,   -0.5f, H, D,   -W,   H, D)     // Frontal esq
-    QUAD( 0.5f,0, D,    W,    0, D,    W,    H, D,    0.5f, H, D)    // Frontal dir
-    QUAD(-0.5f,2.2f,D,  0.5f,2.2f,D,  0.5f,H,D,  -0.5f,H,D)          // Acima da porta
-    QUAD( W, 0,-D,  -W, 0,-D,  -W, H,-D,   W, H,-D)                  // Traseira
-    QUAD(-W, 0,-D,  -W, 0, D,  -W, H, D,  -W, H,-D)                  // Lateral esq
-    QUAD( W, 0, D,   W, 0,-D,   W, H,-D,   W, H, D)                  // Lateral dir
+    // --- PAREDES EXTERNAS (com textura e normais) ---
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texParede);
+    glColor3f(1.0f, 1.0f, 1.0f);
 
-    // --- PAREDES INTERNAS (Recuadas pela espessura WT) ---
-    glColor3f(0.85f, 0.82f, 0.77f); // Levemente mais escuro para sombreamento interno
-    QUAD(-W+WT, 0, D-WT,  -0.5f, 0, D-WT,  -0.5f, H, D-WT,  -W+WT, H, D-WT) 
-    QUAD( 0.5f, 0, D-WT,   W-WT, 0, D-WT,   W-WT, H, D-WT,   0.5f, H, D-WT) 
-    QUAD(-0.5f, 2.2f, D-WT,  0.5f, 2.2f, D-WT,  0.5f, H, D-WT,  -0.5f, H, D-WT) 
-    QUAD( W-WT, 0, -D+WT,  -W+WT, 0, -D+WT,  -W+WT, H, -D+WT,   W-WT, H, -D+WT) 
-    QUAD(-W+WT, 0, -D+WT,  -W+WT, 0, D-WT,  -W+WT, H, D-WT,  -W+WT, H, -D+WT) 
-    QUAD( W-WT, 0, D-WT,   W-WT, 0, -D+WT,   W-WT, H, -D+WT,   W-WT, H, D-WT) 
+    // Frontal esquerda
+    glNormal3f(0.0f, 0.0f, 1.0f);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-W,    0, D);
+    glTexCoord2f(1.5f, 0.0f); glVertex3f(-0.5f, 0, D);
+    glTexCoord2f(1.5f, 3.0f); glVertex3f(-0.5f, H, D);
+    glTexCoord2f(0.0f, 3.0f); glVertex3f(-W,    H, D);
+    glEnd();
 
-    // --- BATENTE DA PORTA (Conecta o lado externo e interno) ---
+    // Frontal direita
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f( 0.5f, 0, D);
+    glTexCoord2f(1.5f, 0.0f); glVertex3f( W,    0, D);
+    glTexCoord2f(1.5f, 3.0f); glVertex3f( W,    H, D);
+    glTexCoord2f(0.0f, 3.0f); glVertex3f( 0.5f, H, D);
+    glEnd();
+
+    // Acima da porta
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.5f, 2.2f, D);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f( 0.5f, 2.2f, D);
+    glTexCoord2f(1.0f, 0.8f); glVertex3f( 0.5f, H,    D);
+    glTexCoord2f(0.0f, 0.8f); glVertex3f(-0.5f, H,    D);
+    glEnd();
+
+    // Traseira
+    glNormal3f(0.0f, 0.0f, -1.0f);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f( W, 0, -D);
+    glTexCoord2f(4.0f, 0.0f); glVertex3f(-W, 0, -D);
+    glTexCoord2f(4.0f, 3.0f); glVertex3f(-W, H, -D);
+    glTexCoord2f(0.0f, 3.0f); glVertex3f( W, H, -D);
+    glEnd();
+
+    // Lateral esquerda
+    glNormal3f(-1.0f, 0.0f, 0.0f);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-W, 0, -D);
+    glTexCoord2f(4.0f, 0.0f); glVertex3f(-W, 0,  D);
+    glTexCoord2f(4.0f, 3.0f); glVertex3f(-W, H,  D);
+    glTexCoord2f(0.0f, 3.0f); glVertex3f(-W, H, -D);
+    glEnd();
+
+    // Lateral direita
+    glNormal3f(1.0f, 0.0f, 0.0f);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f( W, 0,  D);
+    glTexCoord2f(4.0f, 0.0f); glVertex3f( W, 0, -D);
+    glTexCoord2f(4.0f, 3.0f); glVertex3f( W, H, -D);
+    glTexCoord2f(0.0f, 3.0f); glVertex3f( W, H,  D);
+    glEnd();
+
+    glDisable(GL_TEXTURE_2D);
+
+    // --- PAREDES INTERNAS (com normais) ---
+    glColor3f(0.85f, 0.82f, 0.77f);
+    glNormal3f(0.0f, 0.0f, -1.0f);
+    QUAD(-W+WT, 0, D-WT,  -0.5f, 0, D-WT,  -0.5f, H, D-WT,  -W+WT, H, D-WT)
+    QUAD( 0.5f, 0, D-WT,   W-WT, 0, D-WT,   W-WT, H, D-WT,   0.5f, H, D-WT)
+    QUAD(-0.5f, 2.2f, D-WT,  0.5f, 2.2f, D-WT,  0.5f, H, D-WT,  -0.5f, H, D-WT)
+    glNormal3f(0.0f, 0.0f, 1.0f);
+    QUAD( W-WT, 0, -D+WT,  -W+WT, 0, -D+WT,  -W+WT, H, -D+WT,   W-WT, H, -D+WT)
+    glNormal3f(1.0f, 0.0f, 0.0f);
+    QUAD(-W+WT, 0, -D+WT,  -W+WT, 0, D-WT,  -W+WT, H, D-WT,  -W+WT, H, -D+WT)
+    glNormal3f(-1.0f, 0.0f, 0.0f);
+    QUAD( W-WT, 0, D-WT,   W-WT, 0, -D+WT,   W-WT, H, -D+WT,   W-WT, H, D-WT)
+
+    // --- BATENTE DA PORTA (com normais) ---
     glColor3f(0.80f, 0.78f, 0.73f);
-    QUAD(-0.5f, 0, D,  -0.5f, 0, D-WT,  -0.5f, 2.2f, D-WT,  -0.5f, 2.2f, D) // Batente Esq
-    QUAD( 0.5f, 0, D-WT,  0.5f, 0, D,  0.5f, 2.2f, D,  0.5f, 2.2f, D-WT)    // Batente Dir
-    QUAD(-0.5f, 2.2f, D,  -0.5f, 2.2f, D-WT,  0.5f, 2.2f, D-WT,  0.5f, 2.2f, D) // Batente Cima
+    glNormal3f(1.0f, 0.0f, 0.0f);
+    QUAD(-0.5f, 0, D,  -0.5f, 0, D-WT,  -0.5f, 2.2f, D-WT,  -0.5f, 2.2f, D)
+    glNormal3f(-1.0f, 0.0f, 0.0f);
+    QUAD( 0.5f, 0, D-WT,  0.5f, 0, D,  0.5f, 2.2f, D,  0.5f, 2.2f, D-WT)
+    glNormal3f(0.0f, -1.0f, 0.0f);
+    QUAD(-0.5f, 2.2f, D,  -0.5f, 2.2f, D-WT,  0.5f, 2.2f, D-WT,  0.5f, 2.2f, D)
 }
 
 // ── Porta (Com volume) ────────────────────────────────────────
@@ -236,12 +303,46 @@ static void desenhaTelhado() {
     float RF_b[3] = {RF[0], RF[1]+dy, RF[2]};
     float RB_b[3] = {RB[0], RB[1]+dy, RB[2]};
 
-    // Casca superior do telhado
-    glColor3f(0.88f, 0.62f, 0.10f); 
-    TRI(FL[0],FL[1],FL[2],  FR[0],FR[1],FR[2],  RF[0],RF[1],RF[2]) 
-    TRI(BR[0],BR[1],BR[2],  BL[0],BL[1],BL[2],  RB[0],RB[1],RB[2]) 
-    QUAD(FL[0],FL[1],FL[2],  RF[0],RF[1],RF[2],  RB[0],RB[1],RB[2],  BL[0],BL[1],BL[2]) 
-    QUAD(FR[0],FR[1],FR[2],  BR[0],BR[1],BR[2],  RB[0],RB[1],RB[2],  RF[0],RF[1],RF[2]) 
+    // Casca superior do telhado (com textura e normais)
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texTelhado);
+    glColor3f(1.0f, 1.0f, 1.0f);
+
+    // Triangulo frontal
+    glNormal3f(0.0f, 0.2f, 1.0f);
+    glBegin(GL_TRIANGLES);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(FL[0],FL[1],FL[2]);
+    glTexCoord2f(2.0f, 0.0f); glVertex3f(FR[0],FR[1],FR[2]);
+    glTexCoord2f(1.0f, 1.5f); glVertex3f(RF[0],RF[1],RF[2]);
+    glEnd();
+
+    // Triangulo traseiro
+    glNormal3f(0.0f, 0.2f, -1.0f);
+    glBegin(GL_TRIANGLES);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(BR[0],BR[1],BR[2]);
+    glTexCoord2f(2.0f, 0.0f); glVertex3f(BL[0],BL[1],BL[2]);
+    glTexCoord2f(1.0f, 1.5f); glVertex3f(RB[0],RB[1],RB[2]);
+    glEnd();
+
+    // Aba esquerda
+    glNormal3f(-0.7f, 0.7f, 0.0f);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(FL[0],FL[1],FL[2]);
+    glTexCoord2f(0.0f, 2.0f); glVertex3f(RF[0],RF[1],RF[2]);
+    glTexCoord2f(3.0f, 2.0f); glVertex3f(RB[0],RB[1],RB[2]);
+    glTexCoord2f(3.0f, 0.0f); glVertex3f(BL[0],BL[1],BL[2]);
+    glEnd();
+
+    // Aba direita
+    glNormal3f(0.7f, 0.7f, 0.0f);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(FR[0],FR[1],FR[2]);
+    glTexCoord2f(3.0f, 0.0f); glVertex3f(BR[0],BR[1],BR[2]);
+    glTexCoord2f(3.0f, 2.0f); glVertex3f(RB[0],RB[1],RB[2]);
+    glTexCoord2f(0.0f, 2.0f); glVertex3f(RF[0],RF[1],RF[2]);
+    glEnd();
+
+    glDisable(GL_TEXTURE_2D); 
 
     // Casca inferior (Forro de madeira embaixo do beiral)
     glColor3f(0.78f, 0.52f, 0.08f); 

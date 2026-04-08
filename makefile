@@ -2,7 +2,7 @@ CC      = gcc
 CFLAGS  = -Wall -Iinclude
 TARGET  = plant-crossing
 
-SRC     = src/main.c src/camera.c src/arvore.c src/casa.c src/casa_interior.c src/mundo.c
+SRC     = src/main.c src/camera.c src/arvore.c src/casa.c src/casa_interior.c src/mundo.c src/textura.c
 
 ifeq ($(OS),Windows_NT)
     LIBS   = -lfreeglut -lopengl32 -lglu32 -lm

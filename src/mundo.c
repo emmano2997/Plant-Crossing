@@ -1,4 +1,5 @@
 #include "../include/mundo.h"
+#include "../include/textura.h"
 #include <GL/glut.h>
 #include <math.h>
 #include <stdlib.h>
@@ -146,19 +147,19 @@ void desenhaEsfera(float raio) {
 //   material sem precisar chamar glMaterialfv a cada objeto. Pratico
 //   para projetos onde cada objeto ja tem sua propria cor definida.
 void mundo_iluminacao_init() {
-    // Ativa o pipeline de iluminacao do OpenGL
     glEnable(GL_LIGHTING);
-
-    // Ativa a luz 0 (sera reposicionada a cada frame pelo sol/lua)
     glEnable(GL_LIGHT0);
 
-    // GL_COLOR_MATERIAL: glColor3f passa a controlar o material difuso+ambiente
-    // sem isso, glColor3f seria ignorado quando a iluminacao esta ativa
+    glShadeModel(GL_SMOOTH);
+
     glEnable(GL_COLOR_MATERIAL);
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
-    // Normalizacao automatica das normais apos glScalef
-    // (sem isso, o glScalef distorce os calculos de iluminacao)
+    GLfloat mat_specular[] = {0.3f, 0.3f, 0.3f, 1.0f};
+    GLfloat mat_shininess[] = {25.0f};
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
+
     glEnable(GL_NORMALIZE);
 }
 
@@ -225,6 +226,9 @@ void desenhaSolLua(int estacao) {
     // fiquem completamente pretas (simula luz indireta/reflexao difusa)
     glLightfv(GL_LIGHT0, GL_AMBIENT,  ambiente);
 
+    GLfloat especular[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    glLightfv(GL_LIGHT0, GL_SPECULAR, especular);
+
     // ── Quando o sol esta abaixo do horizonte (y<0): escurece tudo ──
     // Simulamos a noite/entardecer reduzindo a intensidade da luz ambiente
     if (y < 0.0f) {
@@ -251,28 +255,32 @@ void desenhaSolLua(int estacao) {
 }
 // ─── Chao por estacao 
 static void desenhaChao(int estacao) {
-    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texGrama);
 
     switch (estacao) {
-        case 0: glColor3f(0.45f, 0.78f, 0.32f); break; // verao: verde
-        case 1: glColor3f(0.50f, 0.62f, 0.25f); break; // outono: amarelado
-        case 2: glColor3f(0.88f, 0.92f, 0.95f); break; // inverno: neve
-        case 3: glColor3f(0.50f, 0.82f, 0.40f); break; // primavera: verde claro
+        case 0: glColor3f(0.45f, 0.78f, 0.32f); break;
+        case 1: glColor3f(0.50f, 0.62f, 0.25f); break;
+        case 2: glColor3f(0.88f, 0.92f, 0.95f); break;
+        case 3: glColor3f(0.50f, 0.82f, 0.40f); break;
     }
+    glNormal3f(0.0f, 1.0f, 0.0f);
     glBegin(GL_QUADS);
-        glVertex3f(-35.0f, 0.0f, -35.0f);
-        glVertex3f(-35.0f, 0.0f,  35.0f);
-        glVertex3f( 35.0f, 0.0f,  35.0f);
-        glVertex3f( 35.0f, 0.0f, -35.0f);
+        glTexCoord2f(0.0f,  0.0f);  glVertex3f(-35.0f, 0.0f, -35.0f);
+        glTexCoord2f(0.0f,  15.0f); glVertex3f(-35.0f, 0.0f,  35.0f);
+        glTexCoord2f(15.0f, 15.0f); glVertex3f( 35.0f, 0.0f,  35.0f);
+        glTexCoord2f(15.0f, 0.0f);  glVertex3f( 35.0f, 0.0f, -35.0f);
     glEnd();
 
-    // listras decorativas
+    glDisable(GL_TEXTURE_2D);
+
     switch (estacao) {
         case 0: glColor3f(0.42f, 0.74f, 0.29f); break;
         case 1: glColor3f(0.46f, 0.58f, 0.22f); break;
         case 2: glColor3f(0.82f, 0.88f, 0.92f); break;
         case 3: glColor3f(0.46f, 0.78f, 0.36f); break;
     }
+    glNormal3f(0.0f, 1.0f, 0.0f);
     for (int i = -5; i <= 5; i++) {
         glBegin(GL_QUADS);
             glVertex3f(i * 4.0f - 0.6f, 0.01f, -30.0f);
@@ -284,9 +292,11 @@ static void desenhaChao(int estacao) {
 }
 
 static void desenhaCaminho(int estacao) {
+    glDisable(GL_TEXTURE_2D);
     if (estacao == 2) glColor3f(0.80f, 0.84f, 0.90f);
     else              glColor3f(0.60f, 0.50f, 0.40f);
 
+    glNormal3f(0.0f, 1.0f, 0.0f);
     glPushMatrix();
         glTranslatef(0.0f, 0.0f, -1.0f);
         glBegin(GL_QUADS);
@@ -413,37 +423,6 @@ static void desenhaCercaUnidade() {
     glPopMatrix();
 }
 
-void desenhaLago() {
-    glEnable(GL_BLEND); // Ativa transparência
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
-    glColor4f(0.1f, 0.4f, 0.8f, 0.7f); // Azul (agua)
-
-    glPushMatrix();
-        glTranslatef(-22.0f, 0.2f, -22.0f); // Posicao
-        glScalef(1.5f, 1.0f, 1.0f); 
-        desenhaCirculo(2.0f, 30);
-    glPopMatrix();
-    
-    glDisable(GL_BLEND); // Desativa transparência para não afetar outros objetos
-}
-
-static void desenhaNeve() {
-    glDisable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glPointSize(3.5f);
-    glBegin(GL_POINTS);
-    for (int i = 0; i < N_PART; i++) {
-        Particula* p = &partsNeve[i];
-        glColor4f(0.95f, 0.97f, 1.0f, p->vida * 0.9f);
-        glVertex3f(p->x, p->y, p->z);
-    }
-    glEnd();
-    glDisable(GL_BLEND);
-    glPointSize(1.0f);
-}
-
 static void desenhaFolhasVoando() {
     glDisable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
@@ -488,8 +467,6 @@ void desenhaPedras() {
         // EVITAR ÁREAS ESPECÍFICAS:
         // Se a pedra cair dentro do caminho, pulamos para a próxima iteração
         if (z > -0.5f && z < 2.5f && x > -16.0f && x < 16.0f) continue;
-        // Se cair dentro do lago
-        if (x < -16.0f && z < -16.0f) continue;
 
         glPushMatrix();
             glTranslatef(x, 0.05f, z);
@@ -516,8 +493,6 @@ void desenhaVegetacao(int estacao) {
         
         // Evita desenhar em cima do caminho (aproximadamente)
         if (z > -1.0f && z < 3.0f && x > -16.0f && x < 16.0f) continue;
-        // Evita desenhar dentro do lago
-        if (x < -16.0f && z < -16.0f) continue;
 
         // Desenha Grama 
         if (estacao == 2) // Inverno: Grama coberta de neve
@@ -555,23 +530,6 @@ void desenhaVegetacao(int estacao) {
         }
     }
 }
-void configurarFog(int estacao) {
-    glEnable(GL_FOG);
-    
-    GLfloat fogColor[4];
-    switch (estacao) {
-        case 0: fogColor[0]=0.2f; fogColor[1]=0.6f; fogColor[2]=1.0f; break; // Verão
-        case 1: fogColor[0]=0.9f; fogColor[1]=0.6f; fogColor[2]=0.6f; break; // Outono
-        case 2: fogColor[0]=0.6f; fogColor[1]=0.7f; fogColor[2]=0.8f; break; // Inverno
-        case 3: fogColor[0]=0.4f; fogColor[1]=0.7f; fogColor[2]=1.0f; break; // Primavera
-    }
-    fogColor[3] = 1.0f;
-
-    glFogfv(GL_FOG_COLOR, fogColor);
-    glFogi(GL_FOG_MODE, GL_EXP2);      // neblina 
-    glFogf(GL_FOG_DENSITY, 0.002f);    // densidade
-    glHint(GL_FOG_HINT, GL_NICEST);
-}
 static void desenhaMontanha(int estacao) {
     glPushMatrix();        
         // Cor da montanha: um tom que mude com a estação
@@ -581,13 +539,13 @@ static void desenhaMontanha(int estacao) {
 
         glBegin(GL_POLYGON);
             // Desenha a silhueta (x, y, z)
-            glVertex3f(-30.0f,  0.0f, 0.1f);  // Base esquerda
+            glVertex3f(-30.0f,  0.0f, 0.0f);  // Base esquerda
             glVertex3f(-20.0f, 15.0f, 0.2f);  // Pico 1
-            glVertex3f(-10.0f,  8.0f, 0.3f);  // Vale
-            glVertex3f(  0.0f, 20.0f, 0.4f);  // Pico central (mais alto)
+            glVertex3f(-10.0f,  8.0f, 0.35f);  // Vale
+            glVertex3f(  0.0f, 20.0f, 0.45f);  // Pico central (mais alto)
             glVertex3f( 20.0f, 10.0f, 0.5f);  // Vale
-            glVertex3f( 25.0f, 18.0f, 0.6f);  // Pico 2
-            glVertex3f( 35.0f,  0.0f, 0.7f);  // Base direita
+            glVertex3f( 25.0f, 18.0f, 0.65);  // Pico 2
+            glVertex3f( 35.0f,  0.0f, 0.75f);  // Base direita
         glEnd();
         
     glPopMatrix();
@@ -682,7 +640,7 @@ void mundo_desenhar(int estacao) {
     definirCorCeu(estacao);   
     configurarFog(estacao);
     desenhaChao(estacao);
-    desenhaLago();
+    
     desenhaMontanhasBackground(estacao);
     desenhaCaminho(estacao);
 
