@@ -585,7 +585,7 @@ static void desenhaMontanha(int estacao) {
             glVertex3f(-20.0f, 15.0f, 0.2f);  // Pico 1
             glVertex3f(-10.0f,  8.0f, 0.3f);  // Vale
             glVertex3f(  0.0f, 20.0f, 0.4f);  // Pico central (mais alto)
-            glVertex3f( 12.5f, 10.0f, 0.5f);  // Vale
+            glVertex3f( 20.0f, 10.0f, 0.5f);  // Vale
             glVertex3f( 25.0f, 18.0f, 0.6f);  // Pico 2
             glVertex3f( 35.0f,  0.0f, 0.7f);  // Base direita
         glEnd();
@@ -642,39 +642,6 @@ void desenhaArvore(int estacao) {
 }
 void desenhaFloresta(int estacao) {
     float passo = 6.0f; // espacamento
-
-    //fila interna (logo atrás da cerca)
-    // Frente (Z negativo)
-    for (float i = -28.0f; i < 28.0f; i += passo) {
-        glPushMatrix();
-            glTranslatef(i, 0.0f, -27.0f);
-            desenhaArvore(estacao);
-        glPopMatrix();
-    }
-
-    // Fundo (Z positivo)
-    for (float i = -28.0f; i < 28.0f; i += passo) {
-        glPushMatrix();
-            glTranslatef(i, 0.0f, 27.0f);
-            desenhaArvore(estacao);
-        glPopMatrix();
-    }
-
-    // Esquerda (X negativo)
-    for (float i = -28.0f; i < 28.0f; i += passo) {
-        glPushMatrix();
-            glTranslatef(-27.0f, 0.0f, i);
-            desenhaArvore(estacao);
-        glPopMatrix();
-    }
-
-    // Direita (X positivo)
-    for (float i = -28.0f; i < 28.0f; i += passo) {
-        glPushMatrix();
-            glTranslatef(27.0f, 0.0f, i);
-            desenhaArvore(estacao);
-        glPopMatrix();
-    }
 
     // Frente externa
     for (float i = -28.0f; i < 28.0f; i += passo) {
