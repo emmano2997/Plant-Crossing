@@ -119,7 +119,7 @@ int checkWorldCollision(float px, float pz) {
     }
 }
 
-// --- NOVA FUNÇÃO: Renderizador de UI 2D ---
+// --- Renderizador de UI 2D ---
 void renderText2D(float x, float y, const char *string) {
     // Pega o tamanho atual da janela para o mapeamento 2D
     int width = glutGet(GLUT_WINDOW_WIDTH);
@@ -386,12 +386,12 @@ int main(int argc, char** argv) {
     return 0;
 }
 // ─── Resumo dos controles ─────────────────────────────────────────────
-// WASD →  movimentacao basica
-// C  →  alterna entre camera jogador e camera livre (free look)
-// Z  →  teletransporta para dentro da casa (e volta para fora se ja estiver dentro)
-// R  →  rega a planta (so funciona uma vez por estacao)
-// F  →  dorme / passa para proxima estacao
-//        se regou: planta cresce (estagio++)
-//        se nao regou: planta regride (estagio--)
-//        se era brotinho sem rega: MORRE (estagio=4)
-// Q 
+// WASD →   movimentacao basica
+// C    →   alterna entre camera jogador e camera livre (free look)
+// Z    →   teletransporta para dentro da casa (e volta para fora se ja estiver dentro)
+// R    →   rega a planta (so funciona uma vez por estacao)
+// F    →   dorme / passa para proxima estacao
+//              se regou: planta cresce (estagio++)
+//              se nao regou: planta regride (estagio--)
+//              se era brotinho sem rega: MORRE (estagio=4)
+// Q    →   reinicia o jogo

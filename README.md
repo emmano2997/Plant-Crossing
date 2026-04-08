@@ -18,23 +18,28 @@ Ambiente 3D nas diferentes estações:
 <table>
   <tr>
     <td align="center">
-      <img src="https://github.com/emmano2997/Plant-Crossing/img/verao.png" width="300"/><br/>
-      <sub><b>Figure 1:</b>Verão</sub>
+      <img src="https://github.com/emmano2997/Plant-Crossing/blob/main/img/verao.png" width="300"/><br/>
+      <sub><b>Figure 1:</b> Verão</sub>
     </td>
     <td align="center">
-      <img src="https://github.com/emmano2997/Plant-Crossing/img/outono.png" width="300"/><br/>
-      <sub><b>Figure 2:</b>Outono</sub>
+      <img src="https://github.com/emmano2997/Plant-Crossing/blob/main/img/outono.png" width="300"/><br/>
+      <sub><b>Figure 2:</b> Outono</sub>
     </td>
     <td align="center">
-      <img src="https://github.com/emmano2997/Plant-Crossing/img/inverno.png" width="300"/><br/>
-      <sub><b>Figure 3:</b>Inverno</sub>
+      <img src="https://github.com/emmano2997/Plant-Crossing/blob/main/img/inverno.png" width="300"/><br/>
+      <sub><b>Figure 3:</b> Inverno</sub>
     </td>
         <td align="center">
-      <img src="https://github.com/emmano2997/Plant-Crossing/img/primavera.png" width="300"/><br/>
-      <sub><b>Figure 3:</b>Primavera</sub>
+      <img src="https://github.com/emmano2997/Plant-Crossing/blob/main/img/primavera.png" width="300"/><br/>
+      <sub><b>Figure 3:</b> Primavera</sub>
     </td>
   </tr>
 </table>
+
+<p align="center">
+  <img src="https://github.com/emmano2997/Plant-Crossing/blob/main/img/troca_estacao.gif" width="500">
+  <sub><b>Figure 5:</b> Alteração de Estação</sub>
+</p>
 
 ## 🛠️ Atividades Práticas Implementadas
 O projeto aplica os conceitos fundamentais da disciplina:
