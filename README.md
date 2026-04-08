@@ -75,6 +75,10 @@ make run
 
 * **Near Clipping:** A câmera atravessava móveis antes de colidir. Ajustado diminuindo o plano de corte próximo no gluPerspective para 0.1f.
 
+* **Texturas sem iluminação:** Ao aplicar texturas, os objetos ficavam com cor flat, ignorando a luz. Resolvido configurando `glTexEnvf` com `GL_MODULATE` e setando `glColor3f(1,1,1)` nas superfícies texturizadas para que a cor do material não interferisse na textura.
+
+* **Superfícies sem volume:** Mesmo com iluminação ativa, as superfícies desenhadas manualmente (quads) não reagiam à luz. O problema era a ausência de `glNormal3f` — sem normais definidas, o OpenGL não consegue calcular o ângulo de incidência da luz. Resolvido adicionando normais em todas as superfícies principais.
+
 ## 📈 Melhorias Futuras
 
 * **Sombras Dinâmicas:** Implementar shadow mapping para sombras projetadas pela árvore e casa.
@@ -115,7 +119,7 @@ Responsável pela Arquitetura, Cinemática e Física.
 ### Ralf Dewrich Ferreira
 Responsável pelo Realismo Visual (Sombreamento e Texturização).
 
-* Implementou o modelo de sombreamento suave (Gourado Shading) e configurou as propriedades ópticas dos materiais (luz ambiente, difusa e especular) para simular diferentes brilhos e superfícies.
+* Implementou o modelo de sombreamento suave (Gouraud Shading) e configurou as propriedades ópticas dos materiais (luz ambiente, difusa e especular) para simular diferentes brilhos e superfícies.
 
 * Aplicou a técnica de projeção de imagens 2D em modelos 3D utilizando coordenadas UV para garantir o posicionamento preciso das texturas em cada objeto.
 
