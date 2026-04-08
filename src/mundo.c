@@ -260,10 +260,10 @@ static void desenhaChao(int estacao) {
         case 3: glColor3f(0.50f, 0.82f, 0.40f); break; // primavera: verde claro
     }
     glBegin(GL_QUADS);
-        glVertex3f(-30.0f, 0.0f, -30.0f);
-        glVertex3f(-30.0f, 0.0f,  30.0f);
-        glVertex3f( 30.0f, 0.0f,  30.0f);
-        glVertex3f( 30.0f, 0.0f, -30.0f);
+        glVertex3f(-35.0f, 0.0f, -35.0f);
+        glVertex3f(-35.0f, 0.0f,  35.0f);
+        glVertex3f( 35.0f, 0.0f,  35.0f);
+        glVertex3f( 35.0f, 0.0f, -35.0f);
     glEnd();
 
     // listras decorativas
@@ -420,9 +420,9 @@ void desenhaLago() {
     glColor4f(0.1f, 0.4f, 0.8f, 0.7f); // Azul (agua)
 
     glPushMatrix();
-        glTranslatef(-22.0f, 0.02f, -22.0f); // Posicao
+        glTranslatef(-22.0f, 0.2f, -22.0f); // Posicao
         glScalef(1.5f, 1.0f, 1.0f); 
-        desenhaCirculo(5.0f, 30);
+        desenhaCirculo(2.0f, 30);
     glPopMatrix();
     
     glDisable(GL_BLEND); // Desativa transparência para não afetar outros objetos
@@ -555,13 +555,55 @@ void desenhaVegetacao(int estacao) {
         }
     }
 }
+void configurarFog(int estacao) {
+    glEnable(GL_FOG);
+    
+    GLfloat fogColor[4];
+    switch (estacao) {
+        case 0: fogColor[0]=0.2f; fogColor[1]=0.6f; fogColor[2]=1.0f; break; // Verão
+        case 1: fogColor[0]=0.9f; fogColor[1]=0.6f; fogColor[2]=0.6f; break; // Outono
+        case 2: fogColor[0]=0.6f; fogColor[1]=0.7f; fogColor[2]=0.8f; break; // Inverno
+        case 3: fogColor[0]=0.4f; fogColor[1]=0.7f; fogColor[2]=1.0f; break; // Primavera
+    }
+    fogColor[3] = 1.0f;
+
+    glFogfv(GL_FOG_COLOR, fogColor);
+    glFogi(GL_FOG_MODE, GL_EXP2);      // neblina 
+    glFogf(GL_FOG_DENSITY, 0.002f);    // densidade
+    glHint(GL_FOG_HINT, GL_NICEST);
+}
+static void desenhaMontanha(int estacao) {
+    glPushMatrix();
+        // Posiciona bem ao fundo, como uma tela de teatro
+        glTranslatef(0.0f, 0.0f, -33.0f); 
+        
+        // Cor da montanha: um tom que mude com a estação
+        if (estacao == 2) glColor3f(0.7f, 0.75f, 0.85f); // Inverno (azul frio)
+        else if (estacao == 1) glColor3f(0.5f, 0.3f, 0.2f); // Outono (marrom terra)
+        else glColor3f(0.2f, 0.4f, 0.2f); // Primavera/Verão (verde escuro)
+
+        glBegin(GL_POLYGON);
+            // Desenha a silhueta (x, y, z)
+            glVertex3f(-30.0f,  0.0f, 0.1f);  // Base esquerda
+            glVertex3f(-20.0f, 15.0f, 0.2f);  // Pico 1
+            glVertex3f(-10.0f,  8.0f, 0.3f);  // Vale
+            glVertex3f(  0.0f, 20.0f, 0.4f);  // Pico central (mais alto)
+            glVertex3f( 12.5f, 10.0f, 0.5f);  // Vale
+            glVertex3f( 25.0f, 18.0f, 0.6f);  // Pico 2
+            glVertex3f( 35.0f,  0.0f, 0.7f);  // Base direita
+        glEnd();
+        
+    glPopMatrix();
+}
 void mundo_desenhar(int estacao) {
-    inicializaParticulas();
+    //inicializaParticulas();
+
     desenhaSolLua(estacao);
     definirCorCeu(estacao);   
-
+    configurarFog(estacao);
     desenhaChao(estacao);
     desenhaLago();
+    desenhaMontanha(estacao);
     desenhaCaminho(estacao);
 
     desenhaPedras(); 
