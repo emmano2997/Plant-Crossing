@@ -14,7 +14,27 @@ O código gerencia um mundo fechado com renderização em tempo real, integrando
 * HUD Simples: Interface 2D que exibe comandos contextuais baseados na proximidade do jogador com objetos.
 
 ## 📸 Demonstração
-![Descrição da imagem](images/exemplo.png)
+Ambiente 3D nas diferentes estações:
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://github.com/emmano2997/Plant-Crossing/img/verao.png" width="300"/><br/>
+      <sub><b>Figure 1:</b>Verão</sub>
+    </td>
+    <td align="center">
+      <img src="https://github.com/emmano2997/Plant-Crossing/img/outono.png" width="300"/><br/>
+      <sub><b>Figure 2:</b>Outono</sub>
+    </td>
+    <td align="center">
+      <img src="https://github.com/emmano2997/Plant-Crossing/img/inverno.png" width="300"/><br/>
+      <sub><b>Figure 3:</b>Inverno</sub>
+    </td>
+        <td align="center">
+      <img src="https://github.com/emmano2997/Plant-Crossing/img/primavera.png" width="300"/><br/>
+      <sub><b>Figure 3:</b>Primavera</sub>
+    </td>
+  </tr>
+</table>
 
 ## 🛠️ Atividades Práticas Implementadas
 O projeto aplica os conceitos fundamentais da disciplina:
@@ -110,4 +130,6 @@ Responsável pelo Realismo Visual (Sombreamento e Texturização).
 
 * **R:** Regar a planta.
 
-* **F:** Dormir na cama (Passar estação)."
+* **F:** Dormir na cama (Passar estação).
+
+* **Q:** Reiniciar.

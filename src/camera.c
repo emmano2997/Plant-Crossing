@@ -69,7 +69,7 @@ void camera_updateAnimation() {
         isInsideInterior = 1;
         
         // Posição: Ao lado da cama (-1.5) e alinhado com o centro dela (-2.5)
-        camX = -1.5f; 
+        camX = -1.0f; 
         camY = -50.0f + playerHeight; 
         camZ = -2.5f; 
         

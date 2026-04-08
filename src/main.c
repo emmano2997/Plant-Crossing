@@ -261,6 +261,19 @@ void display() {
             glColor3f(0.2f, 0.8f, 1.0f); // Azul claro para combinar com a água!
             renderText2D(20.0f, screenHeight - 100.0f, "'R' para Regar");
         }
+
+        // --- MENSAGEM DE GAME OVER ---
+        if (estagioPlantas == 4 && !isSleepingAnimation) {
+            // Pega o centro da tela
+            int centerX = glutGet(GLUT_WINDOW_WIDTH) / 2;
+            int centerY = glutGet(GLUT_WINDOW_HEIGHT) / 2;
+
+            glColor3f(1.0f, 0.0f, 0.0f); // Texto Vermelho
+            
+            // Os valores (-65 e -110) são compensações em pixels para centralizar a string
+            renderText2D(centerX - 65, centerY + 10, "A Arvore Morreu!");
+            renderText2D(centerX - 110, centerY - 20, "Pressione 'Q' para recomecar");
+        }
     }
 
     glutSwapBuffers();
@@ -269,9 +282,26 @@ void display() {
 void teclado(unsigned char key, int x, int y) {
     // Impede o jogador de tentar regar ou dormir DE NOVO enquanto o mundo gira
     extern int isSleepingAnimation;
-    if (isSleepingAnimation) return; 
+    if (isSleepingAnimation) return;
+    
+    // Acessa o estágio da planta
+    extern int estagioPlantas;
 
     switch (key) {
+        // --- LÓGICA DE REINÍCIO ---
+        case 'q':
+        case 'Q':
+            if (estagioPlantas == 4) {
+                // 1. Reseta o estado da árvore (volta pra estágio 0, crescimento 0.01)
+                arvore_init(); 
+                
+                // 2. Chama a animação (ela já cuida de teleportar o jogador pra cama no final)
+                camera_startSleepAnimation(); 
+                
+                printf("Jogo reiniciado! Voce ganhou uma nova chance.\n");
+            }
+            break;
+
         case 'r': 
         case 'R':
             if (camera_canInteractWithTree()) {
@@ -356,6 +386,7 @@ int main(int argc, char** argv) {
     return 0;
 }
 // ─── Resumo dos controles ─────────────────────────────────────────────
+// WASD →  movimentacao basica
 // C  →  alterna entre camera jogador e camera livre (free look)
 // Z  →  teletransporta para dentro da casa (e volta para fora se ja estiver dentro)
 // R  →  rega a planta (so funciona uma vez por estacao)
@@ -363,3 +394,4 @@ int main(int argc, char** argv) {
 //        se regou: planta cresce (estagio++)
 //        se nao regou: planta regride (estagio--)
 //        se era brotinho sem rega: MORRE (estagio=4)
+// Q 
